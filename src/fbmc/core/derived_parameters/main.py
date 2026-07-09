@@ -71,7 +71,7 @@ def _calculate_fbmc_parameters_subnet(
         base_flows_subnet, 
         net_positions_base_case=base_net_positions_subnet,
         reliability_margin_factor=config.reliability_margin_factor, 
-        min_ram=0,
+        min_ram=config.min_ram
         )
     
     zones = sub_network.buses().zone_name.unique()
