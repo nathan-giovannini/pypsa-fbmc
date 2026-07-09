@@ -72,7 +72,10 @@ def copy_net(oldnet, time_dependent_attrs=None):
                     if not old_attr[attr_name].empty:
                         old_df = old_attr[attr_name]
                         cols = old_df.columns
-                        new_attr[attr_name].loc[:, cols] = old_df.values
+                        if attr_name in new_attr:
+                            new_attr[attr_name].loc[:, cols] = old_df.values
+                        else:
+                            print(f"Skipping missing attribute {attr_name}")
     else:
         for attr_name in time_dependent_attrs:
             
