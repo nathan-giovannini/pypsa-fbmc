@@ -64,7 +64,7 @@ def calculate_zonal_ptdf(
 
 def filter_zptdf(
         z_ptdf: xr.DataArray,
-        sensitivity_threshold: float = 1e-3
+        sensitivity_threshold: float = 0.05
         ):
     """
     Filter zonal PTDF to include only those with a signficant sensitivity to NP changes.
