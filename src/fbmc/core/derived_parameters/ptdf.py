@@ -53,6 +53,7 @@ def calculate_zonal_ptdf(
     gsk_subnet = gsk.sel(Bus=ptdf.coords['Bus']) # Align GSK to PTDF columns based on zone names
     # gsk_filtered = gsk_filtered.loc[gsk_filtered.sum(axis=1) > 1e-6]  # Remove zones with zero GSK in this subnetwork
 
+
     assert np.abs(gsk_subnet.sum('Bus') - 1).max() < 1e-6, "GSK rows must sum to 1"
     z_ptdf = xr.dot(gsk_subnet, ptdf, dims='Bus')
 

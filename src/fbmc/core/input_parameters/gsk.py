@@ -524,10 +524,13 @@ def gsk_p_nom(generators: pd.DataFrame, buses: pd.DataFrame) -> pd.DataFrame:
     Args:
         generators (pd.DataFrame): DataFrame containing generator data with columns ['bus', 'p_nom'].
         buses (pd.DataFrame): DataFrame containing bus data with column ['zone_name'].
+        sub_network (pypsa.SubNetwork | None): Optional subnetwork object. If provided, only generators
+                                               and buses belonging to this subnetwork are considered.
 
     Returns:
         pd.DataFrame: GSK matrix with zones as index and buses as columns.
     """
+
     gen_zone_map = generators.bus.map(buses['zone_name'])
     total_p_nom_per_zone = generators.groupby(gen_zone_map)['p_nom'].sum()
     p_nom_per_node = generators.groupby([generators.bus, gen_zone_map])['p_nom'].sum().to_frame()

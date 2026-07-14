@@ -100,6 +100,7 @@ def calculate_ram(
 
     assert (upper_ram >= lower_ram).values.all(), "Upper RAM must be greater than lower RAM for all CNECs"
 
+
     return upper_ram, lower_ram
 
 
