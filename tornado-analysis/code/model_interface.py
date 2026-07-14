@@ -20,7 +20,7 @@ def run_model(network: pypsa.Network) -> dict:
     """
 
     # --- Case A: your market model IS PyPSA's own optimizer -------------
-    network.optimize(solver_name="highs")  # swap solver/options as needed
+    network.optimize(solver_name="gurobi")  # swap solver/options as needed
 
     total_cost = network.objective
     total_generation = network.generators_t.p.sum().sum()
