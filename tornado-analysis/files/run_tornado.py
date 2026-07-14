@@ -31,7 +31,7 @@ from perturb import apply_perturbation
 from model_interface import run_model
 from param_expansion import expand_parameters
 from welfare import bus_country_map, distribution_shift
-
+from baseline_preproc import freeze_expansion, bidding_zones_rename
 
 def _split_metrics(raw_metrics):
     """Pull the welfare_by_country dict out of the flat scalar metrics."""
@@ -76,7 +76,8 @@ def main():
     print(f"Loading baseline network from {BASELINE_NETWORK_PATH}")
     baseline_network = pypsa.Network(BASELINE_NETWORK_PATH)
     bus_country = bus_country_map(baseline_network, prefix_length=COUNTRY_BUS_PREFIX_LENGTH)
-    ## here I can put also the pre-processing of the baseline_network (capacity-freeze, zone_columns)
+    baseline_network = freeze_expansion(baseline_network)  #these two can be updated with the use of _self
+    baseline_network = bidding_zones_rename(baseline_network) #these two can be updated with the use of _self
 
     parameters = expand_parameters(PARAMETERS, bus_country)
     print(f"{len(PARAMETERS)} configured parameter(s) expanded to {len(parameters)} "
