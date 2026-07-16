@@ -31,34 +31,38 @@ PARAMETERS = [
         "name": "Gas price (marginal cost of gas generators)",
         "component": "generators",
         "attribute": "marginal_cost",
-        "selector": lambda df: df["carrier"] == "gas",
-        "countries": ["DE", "FR", "ES"],   # run independently per country
+        "selector": lambda df: df["carrier"] == "CCGT",
+        "countries": ["B"],   # run independently per country
         "variation": 0.20,
     },
-    {
-        "name": "Demand level",
-        "component": "loads",
-        "attribute": "p_set",
-        "selector": "all",
-        "countries": ["DE", "FR", "ES"],
-        "variation": 0.20,
-    },
-    {
-        "name": "Wind capacity (system-wide)",
-        "component": "generators",
-        "attribute": "p_nom",
-        "selector": lambda df: df["carrier"] == "wind",
-        # no "countries" -> single system-wide run, not expanded
-        "variation": 0.20,
-    },
+    # {
+    #     "name": "Demand level",
+    #     "component": "loads",
+    #     "attribute": "p_set",
+    #     "selector": "all",
+    #     "countries": ["DE", "FR", "ES"],
+    #     "variation": 0.20,
+    # },
+    # {
+    #     "name": "Wind capacity (system-wide)",
+    #     "component": "generators",
+    #     "attribute": "p_nom",
+    #     "selector": lambda df: df["carrier"] == "wind",
+    #     # no "countries" -> single system-wide run, not expanded
+    #     "variation": 0.20,
+    # },
     # ... add as many parameters as you need
 ]
 
 # Path to your baseline PyPSA network (.nc, .h5, or a folder of CSVs
 # depending on how you normally load it)
-BASELINE_NETWORK_PATH = "network_baseline.nc"
 
-RESULTS_DIR = "results"
+#BASELINE_NETWORK_PATH = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/validation/three-country-fbmc.nc"
+BASELINE_NETWORK_PATH = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/test/base_s_25_elec_Ep100.nc"
+
+
+#RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/validation"
+RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/test2"
 
 # How to map buses to countries when network.buses has no 'country' column,
 # e.g. bus "DE1" -> "DE" with prefix_length=2. Set to None if your network
@@ -70,3 +74,9 @@ COUNTRY_BUS_PREFIX_LENGTH = 2
 # to match your model's assumptions, or replace consumer_surplus_by_country()
 # in welfare.py if you have elastic demand / demand curves.
 VOLL = 3000
+
+#baseline preprocessing
+FREEZE_EXPANSION_FLAG = True
+BZ_RENAME_FLAG = True
+BZ_RENAME_FILE = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/test/bz_rename.csv"
+

@@ -30,9 +30,14 @@ metrics and the resulting welfare distribution by country.
   expanding country-scoped parameters), writing:
   - `results/tornado_results.csv` — one row per run: scalar metrics plus
     `welfare_distribution_shift` (use this as the tornado chart metric)
-  - `results/welfare_by_country.csv` — one row per (run, country): welfare
-    level, its share of total system welfare, and the change in that
-    share vs baseline
+  - `results/welfare_by_country.csv` — one row per (run, country), with
+    the full disaggregation kept as separate columns
+    (`producer_surplus`, `storage_surplus`, `consumer_surplus`,
+    `line_congestion_rent`, `link_congestion_rent`, `total`), plus
+    `welfare_share` and `delta_share_vs_baseline` computed from `total`.
+    The disaggregation is there for later analysis (e.g. "did this
+    parameter mostly hit consumers or producers in country X?"), not just
+    the headline total.
 - `analyze_tornado.py` — builds the tornado chart for a chosen metric
   (defaults to `welfare_distribution_shift`).
 - `analyze_welfare_distribution.py` — for one specific parameter/direction,
@@ -69,8 +74,11 @@ metrics and the resulting welfare distribution by country.
   between the two countries a line connects. Change the split logic in
   `congestion_rent_by_country()` if your analysis needs a different
   convention (e.g. attribute fully to the importer).
-- **storage_units / links**: not included in the welfare calculation by
-  default — extend `welfare.py` if they're material in your network.
+- **storage_units / links**: included. Storage producer surplus applies
+  `marginal_cost` only to the discharging (positive dispatch) leg; link
+  rent accounts for efficiency losses via PyPSA's `p0`/`p1` convention and
+  nets out any link `marginal_cost`. Both are split the same 50/50 way as
+  line congestion rent when they connect two countries.
 - **`welfare_distribution_shift`** is the sum of absolute changes in each
   country's *share* of total system welfare vs baseline — it isolates
   redistribution from overall welfare growth/shrinkage, so it's a good

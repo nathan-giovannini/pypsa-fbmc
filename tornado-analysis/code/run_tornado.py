@@ -14,9 +14,14 @@ can be interrupted safely:
                                   (how much welfare moved between countries,
                                   vs baseline -- use this as the tornado
                                   chart metric)
-- results/welfare_by_country.csv one row per (run, country): welfare level,
-                                  its share of total system welfare, and
-                                  the change in that share vs baseline
+- results/welfare_by_country.csv one row per (run, country): the full
+                                  welfare disaggregation (producer_surplus,
+                                  storage_surplus, consumer_surplus,
+                                  line_congestion_rent, link_congestion_rent,
+                                  total), its share of total system welfare,
+                                  and the change in that share vs baseline
+                                  -- so the breakdown is available for
+                                  further analysis later, not just totals
 
 Usage:
     python run_tornado.py
@@ -26,40 +31,45 @@ import os
 import pypsa
 import pandas as pd
 
-from config import PARAMETERS, BASELINE_NETWORK_PATH, RESULTS_DIR, COUNTRY_BUS_PREFIX_LENGTH
+from config import PARAMETERS, BASELINE_NETWORK_PATH, RESULTS_DIR, COUNTRY_BUS_PREFIX_LENGTH, FREEZE_EXPANSION_FLAG, BZ_RENAME_FLAG, BZ_RENAME_FILE
 from perturb import apply_perturbation
 from model_interface import run_model
 from param_expansion import expand_parameters
-from welfare import bus_country_map, distribution_shift
+from welfare import bus_country_map, distribution_shift, WELFARE_COMPONENT_COLUMNS
 from baseline_preproc import freeze_expansion, bidding_zones_rename
 
+WELFARE_COLUMNS = WELFARE_COMPONENT_COLUMNS + ["total"]
+
+
 def _split_metrics(raw_metrics):
-    """Pull the welfare_by_country dict out of the flat scalar metrics."""
+    """Pull the welfare_by_country dict out of the flat scalar metrics and
+    turn it back into a DataFrame indexed by country."""
     metrics = dict(raw_metrics)
-    welfare = metrics.pop("welfare_by_country", {})
-    return metrics, pd.Series(welfare, dtype=float)
+    welfare_dict = metrics.pop("welfare_by_country", {})
+    welfare_df = pd.DataFrame.from_dict(welfare_dict, orient="index")
+    welfare_df = welfare_df.reindex(columns=WELFARE_COLUMNS, fill_value=0)
+    return metrics, welfare_df
 
 
-def _welfare_rows(parameter, direction, welfare, baseline_welfare):
-    all_countries = welfare.index.union(baseline_welfare.index)
-    welfare = welfare.reindex(all_countries, fill_value=0)
-    baseline_welfare = baseline_welfare.reindex(all_countries, fill_value=0)
+def _welfare_rows(parameter, direction, welfare_df, baseline_df):
+    all_countries = welfare_df.index.union(baseline_df.index)
+    welfare_df = welfare_df.reindex(all_countries, fill_value=0)
+    baseline_df = baseline_df.reindex(all_countries, fill_value=0)
 
-    total = welfare.sum()
-    baseline_total = baseline_welfare.sum()
+    total = welfare_df["total"].sum()
+    baseline_total = baseline_df["total"].sum()
 
     rows = []
     for country in all_countries:
-        share = welfare[country] / total if total else 0
-        baseline_share = baseline_welfare[country] / baseline_total if baseline_total else 0
-        rows.append({
-            "parameter": parameter,
-            "direction": direction,
-            "country": country,
-            "welfare": welfare[country],
-            "welfare_share": share,
-            "delta_share_vs_baseline": share - baseline_share,
-        })
+        share = welfare_df.loc[country, "total"] / total if total else 0
+        baseline_share = baseline_df.loc[country, "total"] / baseline_total if baseline_total else 0
+
+        row = {"parameter": parameter, "direction": direction, "country": country}
+        for col in WELFARE_COLUMNS:
+            row[col] = welfare_df.loc[country, col]
+        row["welfare_share"] = share
+        row["delta_share_vs_baseline"] = share - baseline_share
+        rows.append(row)
     return rows
 
 
@@ -75,9 +85,15 @@ def main():
 
     print(f"Loading baseline network from {BASELINE_NETWORK_PATH}")
     baseline_network = pypsa.Network(BASELINE_NETWORK_PATH)
+
+    baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
     bus_country = bus_country_map(baseline_network, prefix_length=COUNTRY_BUS_PREFIX_LENGTH)
-    baseline_network = freeze_expansion(baseline_network)  #these two can be updated with the use of _self
-    baseline_network = bidding_zones_rename(baseline_network) #these two can be updated with the use of _self
+
+    if FREEZE_EXPANSION_FLAG == True:
+        baseline_network = freeze_expansion(baseline_network)
+
+    if BZ_RENAME_FLAG == True:
+        baseline_network = bidding_zones_rename(baseline_network, BZ_RENAME_FILE)
 
     parameters = expand_parameters(PARAMETERS, bus_country)
     print(f"{len(PARAMETERS)} configured parameter(s) expanded to {len(parameters)} "
@@ -102,12 +118,12 @@ def main():
 
             try:
                 metrics, welfare = _split_metrics(run_model(perturbed_network))
-                shift = distribution_shift(baseline_welfare, welfare)
+                shift = distribution_shift(baseline_welfare["total"], welfare["total"])
                 status = "ok"
             except Exception as e:
                 print(f"  FAILED: {e}")
                 metrics = {k: None for k in baseline_metrics}
-                welfare = pd.Series(dtype=float)
+                welfare = pd.DataFrame(columns=WELFARE_COLUMNS)
                 shift = None
                 status = f"failed: {e}"
 
