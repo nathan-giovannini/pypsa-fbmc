@@ -23,7 +23,12 @@ Define every parameter you want to test in PARAMETERS. Each entry:
              COUNTRY_BUS_PREFIX_LENGTH below (or a 'country' column on
              network.buses, if present -- see welfare.bus_country_map()).
              Omit "countries" for a single system-wide run.
-- variation: relative variation to apply, e.g. 0.20 for +/-20%
+- variation: (optional) relative variation to apply, e.g. 0.20 for +/-20%
+             Use this for percentage-based changes.
+- discrete_change: (optional) absolute value change to apply, e.g. 100 for +/-100 units
+                   Use this for discrete/absolute changes instead of percentages.
+             
+NOTE: Specify either 'variation' OR 'discrete_change', but not both.
 """
 
 PARAMETERS = [
@@ -69,6 +74,20 @@ PARAMETERS = [
         "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],
         "variation": 0.10,
     },
+    # Example of discrete parameter change (uncomment to use):
+    # {
+    #     "name": "Gas plant capacity (absolute change)",
+    #     "component": "generators",
+    #     "attribute": "p_nom",
+    #     "selector": lambda df: df["carrier"] == "CCGT",
+    #     "discrete_change": 100,  # ±100 MW change instead of percentage
+    # },
+    # {
+    #     "name": "System frequency (discrete shift)",
+    #     "component": "carriers",
+    #     "attribute": "some_attribute",
+    #     "discrete_change": 0.5,  # ±0.5 Hz or other absolute units
+    # },
     # {
     #     "name": "Wind capacity (system-wide)",
     #     "component": "generators",
@@ -105,4 +124,3 @@ VOLL = 3000
 FREEZE_EXPANSION_FLAG = True
 BZ_RENAME_FLAG = True
 BZ_RENAME_FILE = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/test/bz_rename.csv"
-
