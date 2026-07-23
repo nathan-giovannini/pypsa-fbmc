@@ -25,7 +25,6 @@ def _resolve_mask(index, selector, static_df):
     # assume list/iterable of names
     return pd.Series(index.isin(selector), index=index)
 
-
 def apply_perturbation(network: pypsa.Network, param: dict, direction: str) -> pypsa.Network:
     """
     Return a COPY of `network` with a single parameter perturbed.
@@ -126,11 +125,13 @@ def apply_perturbation(network: pypsa.Network, param: dict, direction: str) -> p
                 # For discrete changes across multiple assets, distribute proportionally
                 current_values = static_df.loc[selected_indices, attribute]
                 total_value = current_values.sum()
+                print(f"current values: {current_values}")
                 
                 if total_value > 0:
                     # Distribute the total adjustment proportionally
                     for idx in selected_indices:
                         proportion = static_df.loc[idx, attribute] / total_value
+                        print(f"idx x proportion: {idx} x {proportion}")
                         static_df.loc[idx, attribute] = static_df.loc[idx, attribute] + (adjustment * proportion)
                 else:
                     # If all values are zero, distribute equally

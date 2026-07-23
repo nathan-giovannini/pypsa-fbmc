@@ -85,12 +85,12 @@ def _get_perturbation_description(param):
     elif "discrete_change_low" in param or "discrete_change_high" in param:
         parts = []
         if "discrete_change_low" in param:
-            parts.append(f"-{param['discrete_change_low']}")
+            parts.append(f"{param['discrete_change_low']} MW")
         if "discrete_change_high" in param:
-            parts.append(f"+{param['discrete_change_high']}")
+            parts.append(f"{param['discrete_change_high']} MW")
         return "/".join(parts) if len(parts) == 2 else parts[0]
     elif "discrete_change" in param:
-        return f"±{param['discrete_change']}"
+        return f"±{param['discrete_change']} MW"
     return "unknown"
 
 
@@ -121,7 +121,7 @@ def main():
     print(f"Loading baseline network from {BASELINE_NETWORK_PATH}")
     baseline_network = pypsa.Network(BASELINE_NETWORK_PATH)
 
-    #baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
+    baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
     bus_country = bus_country_map(baseline_network, prefix_length=COUNTRY_BUS_PREFIX_LENGTH)
 
     if FREEZE_EXPANSION_FLAG == True:
@@ -180,7 +180,6 @@ def main():
             _save(tornado_records, welfare_records, tornado_path, welfare_path)
 
     print(f"\nDone. Results saved to {tornado_path} and {welfare_path}")
-
 
 if __name__ == "__main__":
     main()

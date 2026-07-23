@@ -44,48 +44,48 @@ PERTURBATION TYPES (specify ONE, not multiple):
 """
 
 PARAMETERS = [
-    {
-        "name": "Renewables capacity",
-        "component": "generators",
-        "attribute": "p_nom",
-        "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
-        "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
-        "variation": 0.20,
-    },
-
-    {
-        "name": "Storage capacity",
-        "component": "storage_units",
-        "attribute": "p_nom",
-        "selector": "all",
-        "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
-        "variation": 0.20,
-    },
-
-    {
-        "name": "Gas price (marginal cost of gas generators)",
-        "component": "generators",
-        "attribute": "marginal_cost",
-        "selector": lambda df: df["carrier"] == "CCGT",
-        "variation": 0.2,
-    },
-
-    {
-        "name": "Renewable production",
-        "component": "generators",
-        "attribute": "p_max_pu",
-        "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
-        "variation": 0.20,
-    },
-
-    {
-        "name": "Demand level",
-        "component": "loads",
-        "attribute": "p_set",
-        "selector": "all",
-        "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],
-        "variation": 0.10,
-    },
+ #    {
+ #        "name": "Renewables capacity",
+ #        "component": "generators",
+ #        "attribute": "p_nom",
+ #        "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
+ #        "countries": ['BE'],
+ # #           , 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
+ #        "variation": 0.20,
+ #    },
+    #
+    # {
+    #     "name": "Storage capacity",
+    #     "component": "storage_units",
+    #     "attribute": "p_nom",
+    #     "selector": "all",
+    #     "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
+    #     "variation": 0.20,
+    # },
+    #
+    # {
+    #     "name": "Gas price (marginal cost of gas generators)",
+    #     "component": "generators",
+    #     "attribute": "marginal_cost",
+    #     "selector": lambda df: df["carrier"] == "CCGT",
+    #     "variation": 0.2,
+    # },
+    #
+    # {
+    #     "name": "Renewable production",
+    #     "component": "generators",
+    #     "attribute": "p_max_pu",
+    #     "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
+    #     "variation": 0.20,
+    # },
+    #
+    # {
+    #     "name": "Demand level",
+    #     "component": "loads",
+    #     "attribute": "p_set",
+    #     "selector": "all",
+    #     "variation": 0.10,
+    # },
     
     # Example of discrete symmetric parameter change (uncomment to use):
     # Distributes ±100 proportionally across all gas generators
@@ -100,13 +100,26 @@ PARAMETERS = [
     # Example of discrete asymmetric changes (uncomment to use):
     # Only tests downward: value - 50
     # {
-    #     "name": "Wind capacity (downward only)",
+    #     "name": "Belgian nuclear (downward only)",
     #     "component": "generators",
     #     "attribute": "p_nom",
-    #     "selector": lambda df: df["carrier"] == "onwind",
-    #     "discrete_change_low": 50,  # Only test downward: -50 MW
+    #     "selector": lambda df: df["carrier"] == "nuclear",
+    #     "countries": ['BE'],
+    #     "discrete_change_low": 4000,  # Only test downward: -50 MW
     # },
-    
+    {
+        "name": "transmission test",
+        "component": "lines",
+        "attribute": "s_nom",
+        "selector": lambda df: (
+                (df["bus0"].str.contains("FR") & df["bus1"].str.contains("BE"))
+                | (df["bus0"].str.contains("BE") & df["bus1"].str.contains("FR"))
+        ),
+        "countries": ['BE'],
+        "discrete_change_low": 1000,  # Only test downward: -50 MW
+    },
+
+    #
     # Only tests upward: value + 200
     # {
     #     "name": "Solar capacity (upward only)",
