@@ -6,6 +6,11 @@ country-scoped entries into per-country parameters), runs the model with
 the parameter set to -variation and +variation (all else at baseline),
 plus one baseline run for reference.
 
+Supports three types of perturbations:
+- Percentage-based (variation): ±N%
+- Discrete symmetric (discrete_change): ±N units, distributed proportionally across multiple elements
+- Discrete asymmetric (discrete_change_low/high): ±N units with optional directional constraints
+
 Two result files are produced, both written incrementally so a long run
 can be interrupted safely:
 
@@ -73,6 +78,36 @@ def _welfare_rows(parameter, direction, welfare_df, baseline_df):
     return rows
 
 
+def _get_perturbation_description(param):
+    """Generate a human-readable description of the perturbation magnitude and type."""
+    if "variation" in param:
+        return f"{param['variation']*100:.0f}%"
+    elif "discrete_change_low" in param or "discrete_change_high" in param:
+        parts = []
+        if "discrete_change_low" in param:
+            parts.append(f"-{param['discrete_change_low']}")
+        if "discrete_change_high" in param:
+            parts.append(f"+{param['discrete_change_high']}")
+        return "/".join(parts) if len(parts) == 2 else parts[0]
+    elif "discrete_change" in param:
+        return f"±{param['discrete_change']}"
+    return "unknown"
+
+
+def _should_run_direction(param, direction):
+    """Check if a particular direction should be run for this parameter."""
+    if "variation" in param or "discrete_change" in param:
+        # Percentage-based and symmetric discrete always run both directions
+        return True
+    
+    # Asymmetric discrete changes
+    if direction == "low" and "discrete_change_low" not in param:
+        return False
+    if direction == "high" and "discrete_change_high" not in param:
+        return False
+    return True
+
+
 def _save(tornado_records, welfare_records, tornado_path, welfare_path):
     pd.DataFrame(tornado_records).to_csv(tornado_path, index=False)
     pd.DataFrame(welfare_records).to_csv(welfare_path, index=False)
@@ -112,8 +147,14 @@ def main():
 
     for param in parameters:
         for direction in ["low", "high"]:
-            print(f"Running '{param['name']}' [{direction}] "
-                  f"({'-' if direction == 'low' else '+'}{param['variation']*100:.0f}%) ...")
+            # Skip directions that aren't defined for asymmetric discrete changes
+            if not _should_run_direction(param, direction):
+                print(f"Skipping '{param['name']}' [{direction}] (not configured for this direction)")
+                continue
+            
+            perturbation_desc = _get_perturbation_description(param)
+            sign = "-" if direction == "low" else "+"
+            print(f"Running '{param['name']}' [{direction}] ({sign}{perturbation_desc}) ...")
             perturbed_network = apply_perturbation(baseline_network, param, direction)
 
             try:
