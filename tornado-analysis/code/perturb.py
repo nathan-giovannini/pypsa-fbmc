@@ -6,6 +6,7 @@ attributes stored in the *_t dataframes (network.loads_t.p_set, ...).
 Supports two types of perturbations:
 - Percentage-based: variation (e.g. 0.20 for ±20%)
 - Discrete/absolute: discrete_change (e.g. 100 for ±100 units)
+  Can also specify discrete_change_low and/or discrete_change_high for asymmetric changes
 """
 
 import copy
@@ -28,16 +29,21 @@ def apply_perturbation(network: pypsa.Network, param: dict, direction: str) -> p
     """
     Return a COPY of `network` with a single parameter perturbed.
 
-    Supports two perturbation modes:
+    Supports three perturbation modes:
     - Percentage-based (using 'variation' key):
         direction: 'low' -> value * (1 - variation)
                    'high' -> value * (1 + variation)
     
-    - Discrete/absolute (using 'discrete_change' key):
+    - Discrete/absolute symmetric (using 'discrete_change' key):
         direction: 'low' -> value - discrete_change
                    'high' -> value + discrete_change
 
-    Either 'variation' OR 'discrete_change' should be specified, but not both.
+    - Discrete/absolute asymmetric (using 'discrete_change_low' and/or 'discrete_change_high'):
+        direction: 'low' -> value - discrete_change_low (if specified)
+                   'high' -> value + discrete_change_high (if specified)
+        If only one is specified, only that direction is perturbed.
+
+    Either 'variation' OR one of the discrete_change options should be specified, but not both.
     """
     n = copy.deepcopy(network)
     component = param["component"]
@@ -49,14 +55,28 @@ def apply_perturbation(network: pypsa.Network, param: dict, direction: str) -> p
         factor = (1 - param["variation"]) if direction == "low" else (1 + param["variation"])
         use_factor = True
         adjustment = factor
+    elif "discrete_change_low" in param or "discrete_change_high" in param:
+        # Discrete/absolute asymmetric perturbation
+        if direction == "low":
+            if "discrete_change_low" not in param:
+                # If only high is defined, skip low direction
+                return n
+            adjustment = -param["discrete_change_low"]
+        else:  # direction == "high"
+            if "discrete_change_high" not in param:
+                # If only low is defined, skip high direction
+                return n
+            adjustment = param["discrete_change_high"]
+        use_factor = False
     elif "discrete_change" in param:
-        # Discrete/absolute perturbation
+        # Discrete/absolute symmetric perturbation
         adjustment = -param["discrete_change"] if direction == "low" else param["discrete_change"]
         use_factor = False
     else:
         raise ValueError(
-            "Parameter must specify either 'variation' (for percentage-based) "
-            "or 'discrete_change' (for absolute value changes)"
+            "Parameter must specify either 'variation' (for percentage-based), "
+            "'discrete_change' (for symmetric absolute changes), "
+            "or 'discrete_change_low'/'discrete_change_high' (for asymmetric changes)"
         )
 
     static_df = getattr(n, component)
