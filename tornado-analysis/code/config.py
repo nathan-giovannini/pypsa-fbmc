@@ -23,12 +23,24 @@ Define every parameter you want to test in PARAMETERS. Each entry:
              COUNTRY_BUS_PREFIX_LENGTH below (or a 'country' column on
              network.buses, if present -- see welfare.bus_country_map()).
              Omit "countries" for a single system-wide run.
-- variation: (optional) relative variation to apply, e.g. 0.20 for +/-20%
-             Use this for percentage-based changes.
-- discrete_change: (optional) absolute value change to apply, e.g. 100 for +/-100 units
-                   Use this for discrete/absolute changes instead of percentages.
              
-NOTE: Specify either 'variation' OR 'discrete_change', but not both.
+PERTURBATION TYPES (specify ONE, not multiple):
+- variation: 
+    Relative/percentage variation, e.g. 0.20 for ±20%
+    Applied as: low -> value * (1 - variation), high -> value * (1 + variation)
+    
+- discrete_change: 
+    Absolute symmetric change, e.g. 100 for ±100 units
+    Applied as: low -> value - discrete_change, high -> value + discrete_change
+    When multiple elements match the selector, the change is distributed 
+    proportionally based on each element's current value.
+    
+- discrete_change_low and/or discrete_change_high:
+    Absolute asymmetric changes. Allows different magnitudes for up/down directions.
+    - discrete_change_low: amount to subtract in 'low' direction (optional)
+    - discrete_change_high: amount to add in 'high' direction (optional)
+    If only one is defined, only that direction is tested.
+    When multiple elements match, changes are distributed proportionally.
 """
 
 PARAMETERS = [
@@ -74,28 +86,46 @@ PARAMETERS = [
         "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],
         "variation": 0.10,
     },
-    # Example of discrete parameter change (uncomment to use):
+    
+    # Example of discrete symmetric parameter change (uncomment to use):
+    # Distributes ±100 proportionally across all gas generators
     # {
     #     "name": "Gas plant capacity (absolute change)",
     #     "component": "generators",
     #     "attribute": "p_nom",
     #     "selector": lambda df: df["carrier"] == "CCGT",
-    #     "discrete_change": 100,  # ±100 MW change instead of percentage
+    #     "discrete_change": 100,  # ±100 MW distributed proportionally
     # },
+    
+    # Example of discrete asymmetric changes (uncomment to use):
+    # Only tests downward: value - 50
     # {
-    #     "name": "System frequency (discrete shift)",
-    #     "component": "carriers",
-    #     "attribute": "some_attribute",
-    #     "discrete_change": 0.5,  # ±0.5 Hz or other absolute units
-    # },
-    # {
-    #     "name": "Wind capacity (system-wide)",
+    #     "name": "Wind capacity (downward only)",
     #     "component": "generators",
     #     "attribute": "p_nom",
-    #     "selector": lambda df: df["carrier"] == "wind",
-    #     # no "countries" -> single system-wide run, not expanded
-    #     "variation": 0.20,
+    #     "selector": lambda df: df["carrier"] == "onwind",
+    #     "discrete_change_low": 50,  # Only test downward: -50 MW
     # },
+    
+    # Only tests upward: value + 200
+    # {
+    #     "name": "Solar capacity (upward only)",
+    #     "component": "generators",
+    #     "attribute": "p_nom",
+    #     "selector": lambda df: df["carrier"] == "solar",
+    #     "discrete_change_high": 200,  # Only test upward: +200 MW
+    # },
+    
+    # Asymmetric: low -> value - 100, high -> value + 150
+    # {
+    #     "name": "Demand change (asymmetric)",
+    #     "component": "loads",
+    #     "attribute": "p_set",
+    #     "selector": "all",
+    #     "discrete_change_low": 100,   # -100 MW
+    #     "discrete_change_high": 150,  # +150 MW
+    # },
+    
     # ... add as many parameters as you need
 ]
 
