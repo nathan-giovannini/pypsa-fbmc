@@ -1,0 +1,19 @@
+{
+  "cnec_setting": "ALL",
+  "add_security_constraints": false,
+  "security_constraint_bodf_size_threshold": 0.1,
+  "security_constraint_bodf_columnwise_matrix_size_limit": 5000000,
+  "gsk_strategy": "P_NOM",
+  "gsk_kwargs": {},
+  "reliability_margin_factor": 0.0,
+  "min_ram": 0.0,
+  "upper_ram_only_flag": false,
+  "base_case_strategy": "nodal_optimum",
+  "marginal_cost_load_shedding": 100000.0,
+  "advanced_hybrid_coupling_flag": false,
+  "create_model_kwargs": {},
+  "solver_kwargs": {
+    "solver_name": "gurobi",
+    "OutputFlag": 0
+  }
+}

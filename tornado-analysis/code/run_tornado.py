@@ -86,7 +86,7 @@ def main():
     print(f"Loading baseline network from {BASELINE_NETWORK_PATH}")
     baseline_network = pypsa.Network(BASELINE_NETWORK_PATH)
 
-    baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
+    #baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
     bus_country = bus_country_map(baseline_network, prefix_length=COUNTRY_BUS_PREFIX_LENGTH)
 
     if FREEZE_EXPANSION_FLAG == True:

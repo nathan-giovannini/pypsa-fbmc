@@ -28,21 +28,47 @@ Define every parameter you want to test in PARAMETERS. Each entry:
 
 PARAMETERS = [
     {
+        "name": "Renewables capacity",
+        "component": "generators",
+        "attribute": "p_nom",
+        "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
+        "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
+        "variation": 0.20,
+    },
+
+    {
+        "name": "Storage capacity",
+        "component": "storage_units",
+        "attribute": "p_nom",
+        "selector": "all",
+        "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
+        "variation": 0.20,
+    },
+
+    {
         "name": "Gas price (marginal cost of gas generators)",
         "component": "generators",
         "attribute": "marginal_cost",
         "selector": lambda df: df["carrier"] == "CCGT",
-        "countries": ["B"],   # run independently per country
+        "variation": 0.2,
+    },
+
+    {
+        "name": "Renewable production",
+        "component": "generators",
+        "attribute": "p_max_pu",
+        "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
         "variation": 0.20,
     },
-    # {
-    #     "name": "Demand level",
-    #     "component": "loads",
-    #     "attribute": "p_set",
-    #     "selector": "all",
-    #     "countries": ["DE", "FR", "ES"],
-    #     "variation": 0.20,
-    # },
+
+    {
+        "name": "Demand level",
+        "component": "loads",
+        "attribute": "p_set",
+        "selector": "all",
+        "countries": ['BE', 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],
+        "variation": 0.10,
+    },
     # {
     #     "name": "Wind capacity (system-wide)",
     #     "component": "generators",
@@ -62,7 +88,7 @@ BASELINE_NETWORK_PATH = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/input
 
 
 #RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/validation"
-RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/test2"
+RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/test_param"
 
 # How to map buses to countries when network.buses has no 'country' column,
 # e.g. bus "DE1" -> "DE" with prefix_length=2. Set to None if your network

@@ -1,0 +1,4 @@
+parameter,direction,status,welfare_distribution_shift,total_system_cost,total_generation_MWh,curtailment_MWh,avg_electricity_price
+baseline,baseline,ok,0.0,12185316.622246902,3713581.5340127004,82472.2732238995,18.95435105202464
+Gas price (marginal cost of gas generators) - B,low,ok,0.0,12185316.622246902,3713581.5340127004,82472.2732238995,18.95435105202464
+Gas price (marginal cost of gas generators) - B,high,ok,0.0,12185316.622246902,3713581.5340127004,82472.2732238995,18.95435105202464

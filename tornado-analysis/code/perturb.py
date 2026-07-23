@@ -35,15 +35,16 @@ def apply_perturbation(network: pypsa.Network, param: dict, direction: str) -> p
     static_df = getattr(n, component)
     time_container = getattr(n, f"{component}_t", None)
 
-    if attribute in static_df.columns:
-        mask = _resolve_mask(static_df.index, param["selector"], static_df)
-        static_df.loc[mask, attribute] = static_df.loc[mask, attribute] * factor
-
-    elif time_container is not None and attribute in time_container:
+    if time_container is not None and attribute in time_container:
         ts = time_container[attribute]  # DataFrame: snapshots x assets
         mask = _resolve_mask(ts.columns, param["selector"], static_df)
         cols = ts.columns[mask.values]
         ts.loc[:, cols] = ts.loc[:, cols] * factor
+
+    elif attribute in static_df.columns:
+        mask = _resolve_mask(static_df.index, param["selector"], static_df)
+        static_df.loc[mask, attribute] = static_df.loc[mask, attribute] * factor
+
 
     else:
         raise ValueError(
