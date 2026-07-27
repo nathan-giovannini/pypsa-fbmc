@@ -1,4 +1,5 @@
 import xarray as xr
+import numpy as np
 
 def filter_on_cnecs(
         da: xr.DataArray,
