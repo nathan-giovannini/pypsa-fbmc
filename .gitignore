@@ -6,6 +6,9 @@ __pycache__/
 # Test folder
 nathan_tests/
 
+#pycharm folder
+.idea/
+
 # C extensions
 *.so
 
