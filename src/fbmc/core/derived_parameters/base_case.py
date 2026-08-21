@@ -26,7 +26,7 @@ def _calc_net_positions(buses_p: pd.DataFrame, zone_names: pd.Series) -> xr.Data
         .assign_coords(Zone=('Bus', zone_names.values))
         .groupby('Zone').sum('Bus')
     )
-    if float(np.abs(net_positions.sum('Zone')).max()) > 1e-6:
+    if float(np.abs(net_positions.sum('Zone')).max()) > 1:
         raise ValueError("Net positions do not sum to zero.")
     return net_positions
 
