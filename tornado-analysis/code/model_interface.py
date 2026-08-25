@@ -106,6 +106,7 @@ def run_model(network: pypsa.Network) -> dict:
 
     import fbmc
     nodal_net = network.copy()
+    nodal_net.buses.rename(columns={"bidding_zone": "zone_name"}, inplace=True)
     bus_zone_map = nodal_net.buses['zone_name']
     zonal_net = nodal_net.fbmc.to_zonal(bus_zone_map)
 
