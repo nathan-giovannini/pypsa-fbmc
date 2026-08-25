@@ -112,6 +112,9 @@ def _save(tornado_records, welfare_records, tornado_path, welfare_path):
     pd.DataFrame(tornado_records).to_csv(tornado_path, index=False)
     pd.DataFrame(welfare_records).to_csv(welfare_path, index=False)
 
+def _save_network(network, param, direction, perturbation_desc):
+    network.export_to_netcdf(RESULTS_DIR + "/networks/" + f"{param['name']}_{direction}_{perturbation_desc}.nc")
+
 
 def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -178,6 +181,7 @@ def main():
             welfare_records.extend(_welfare_rows(param["name"], direction, welfare, baseline_welfare))
 
             _save(tornado_records, welfare_records, tornado_path, welfare_path)
+            _save_network(perturbed_network, param, direction, perturbation_desc)
 
     print(f"\nDone. Results saved to {tornado_path} and {welfare_path}")
 
