@@ -21,7 +21,8 @@ def freeze_expansion(network):
 
         # p_nom -> p_nom_opt
         if "p_nom" in cols and "p_nom_opt" in cols:
-            df["p_nom"] = df["p_nom_opt"]
+            if "p_nom_extendable" == True:
+                df["p_nom"] = df["p_nom_opt"]
             if "p_nom_extendable" in cols:
                 df["p_nom_extendable"] = False
 
