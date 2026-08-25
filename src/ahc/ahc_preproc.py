@@ -1,5 +1,6 @@
 import pypsa
 import pandas as pd
+import numpy as np
 
 def set_ahc(
         nodal_net: pypsa.Network,
@@ -27,6 +28,8 @@ def set_ahc(
     cross_zone_buses = pd.unique(
         pd.concat([cross_zone_links.bus0, cross_zone_links.bus1])
     )
+
+    cross_zone_buses = np.delete(cross_zone_buses, cross_zone_buses=="PEI")
 
     # Create VH buses
     for bus in cross_zone_buses:
