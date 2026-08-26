@@ -3,7 +3,7 @@ import pandas as pd
 
 def freeze_expansion(network):
     """
-    Replace nominal capacities by their optimized values and
+    Replace nominal capacities by their optimized values, save the original capacities as _orig and
     disable further expansion.
 
     Parameters
@@ -13,30 +13,26 @@ def freeze_expansion(network):
 
     for comp in network.components.values():
         df = getattr(network, comp.list_name, None)
-
         if df is None or df.empty:
             continue
 
-        cols = df.columns
+        if {"p_nom", "p_nom_opt", "p_nom_extendable"}.issubset(df.columns):
+            mask = df["p_nom_extendable"]
+            df.loc[mask, "p_nom_orig"] = df.loc[mask, "p_nom"]
+            df.loc[mask, "p_nom"] = df.loc[mask, "p_nom_opt"]
+            df.loc[mask, "p_nom_extendable"] = False
 
-        # p_nom -> p_nom_opt
-        if "p_nom" in cols and "p_nom_opt" in cols:
-            if "p_nom_extendable" == True:
-                df["p_nom"] = df["p_nom_opt"]
-            if "p_nom_extendable" in cols:
-                df["p_nom_extendable"] = False
+        if {"s_nom", "s_nom_opt", "s_nom_extendable"}.issubset(df.columns):
+            mask = df["s_nom_extendable"]
+            df.loc[mask, "s_nom_orig"] = df.loc[mask, "s_nom"]
+            df.loc[mask, "s_nom"] = df.loc[mask, "s_nom_opt"]
+            df.loc[mask, "s_nom_extendable"] = False
 
-        # s_nom -> s_nom_opt
-        if "s_nom" in cols and "s_nom_opt" in cols:
-            df["s_nom"] = df["s_nom_opt"]
-            if "s_nom_extendable" in cols:
-                df["s_nom_extendable"] = False
-
-        # e_nom -> e_nom_opt
-        if "e_nom" in cols and "e_nom_opt" in cols:
-            df["e_nom"] = df["e_nom_opt"]
-            if "e_nom_extendable" in cols:
-                df["e_nom_extendable"] = False
+        if {"e_nom", "e_nom_opt", "e_nom_extendable"}.issubset(df.columns):
+            mask = df["e_nom_extendable"]
+            df.loc[mask, "e_nom_orig"] = df.loc[mask, "e_nom"]
+            df.loc[mask, "e_nom"] = df.loc[mask, "e_nom_opt"]
+            df.loc[mask, "e_nom_extendable"] = False
 
     return network
 
