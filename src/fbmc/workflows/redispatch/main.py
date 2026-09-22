@@ -81,10 +81,19 @@ def run_redispatch(
 
 
 def add_load_shedding(net: pypsa.Network, load_shedding_cost: float) -> None:
+    load_shedding_names = pd.Index(net.buses.index + "_load_shedding")
+    existing_names = load_shedding_names.intersection(net.generators.index)
+    if len(existing_names) > 0:
+        net.generators.loc[existing_names, "marginal_cost"] = load_shedding_cost
+
+    new_names = load_shedding_names.difference(existing_names)
+    if new_names.empty:
+        return
+
     net.add(
         "Generator",
-        net.buses.index + "_load_shedding",
-        bus=net.buses.index,
+        new_names,
+        bus=new_names.str.removesuffix("_load_shedding"),
         p_nom=1e6,
         marginal_cost=load_shedding_cost,
         carrier="load-shedding",

@@ -72,8 +72,9 @@ def copy_net(oldnet, time_dependent_attrs=None):
                     if not old_attr[attr_name].empty:
                         old_df = old_attr[attr_name]
                         cols = old_df.columns
+                        aligned_old_df = old_df.reindex(index=net.snapshots)
                         if attr_name in new_attr:
-                            new_attr[attr_name].loc[:, cols] = old_df.values
+                            new_attr[attr_name].loc[aligned_old_df.index, cols] = aligned_old_df.values
                         else:
                             print(f"Skipping missing attribute {attr_name}")
     else:
@@ -82,7 +83,8 @@ def copy_net(oldnet, time_dependent_attrs=None):
             for attr in time_dependent_attrs[attr_name]:
                 df = oldnet.__getattribute__(attr_name)[attr]
                 if not df.empty:
-                    net.__getattribute__(attr_name)[attr].loc[:, df.columns] = df.values
+                    aligned_df = df.reindex(index=net.snapshots)
+                    net.__getattribute__(attr_name)[attr].loc[aligned_df.index, aligned_df.columns] = aligned_df.values
 
     return net
 
