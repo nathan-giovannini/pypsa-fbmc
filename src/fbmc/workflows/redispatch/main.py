@@ -17,6 +17,14 @@ def select_flex_gens(net, flexible_carriers: Sequence[str]) -> pd.Index:
         ]
 
 
+def _drop_existing_model(net: pypsa.Network) -> None:
+    try:
+        if hasattr(net, "model"):
+            del net.model
+    except ValueError:
+        pass
+
+
 
 def run_redispatch(
         nodal_net:pypsa.Network, 
@@ -56,6 +64,7 @@ def run_redispatch(
 
     flex_gens_up = select_flex_gens(nodal_net, adjustable_carriers)
     add_load_shedding(nodal_net, load_shedding_cost=load_shedding_cost)
+    _drop_existing_model(nodal_net)
 
 
     nodal_net.buses.loc[:, 'sub_network'] = pd.NA
@@ -110,12 +119,9 @@ def _set_nodal_objective(
         create_model_kwargs=None,
     ) -> None:
     '''Create a model instance and alter its objective from the standard PyPSA formulation.'''
-    if net.model is None:
-        # model = net.optimize.create_model()
-        from fbmc.core.model.main import _create_model_without_meshed_split
-        model = _create_model_without_meshed_split(net, create_model_kwargs=create_model_kwargs)
-    else:
-        model = net.model
+    from fbmc.core.model.main import _create_model_without_meshed_split
+
+    model = _create_model_without_meshed_split(net, create_model_kwargs=create_model_kwargs)
 
     gen_p_old = xr.DataArray(
             dispatch_results.generators_p.values,

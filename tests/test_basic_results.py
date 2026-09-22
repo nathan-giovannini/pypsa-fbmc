@@ -113,4 +113,20 @@ class TestFBMCResults(unittest.TestCase):
 
         self.assertEqual(first_constraints, second_constraints)
         self.assertIn("Zone-definition", second_constraints)
+
+    def test_solve_invalidates_cached_results(self):
+        nodal_net = self.setup_network()
+        zonal_net = nodal_to_zonal(nodal_net, nodal_net.buses.zone_name)
+        config = self.mock_config()
+
+        zonal_net.fbmc.create_model(nodal_net, config)
+        zonal_net.fbmc.solve()
+        first_result = zonal_net.fbmc.results()
+        self.assertIs(first_result, zonal_net._fbmc_state.result)
+
+        zonal_net.fbmc.solve()
+        self.assertIsNone(zonal_net._fbmc_state.result)
+
+        second_result = zonal_net.fbmc.results()
+        self.assertIsNot(first_result, second_result)
         
