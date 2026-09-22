@@ -2,7 +2,7 @@
 import pypsa
 
 
-from ..derived_parameters.bridge_branches import find_bridges_network
+from ..parameters.bridge_branches import find_bridges_network
 from ...enums import BaseCaseStrategy
 
 
@@ -53,4 +53,3 @@ def prepare_base_case(net: pypsa.Network, strategy: BaseCaseStrategy, base_case_
     if base_case_kwargs is None:
         base_case_kwargs = {}
     return prepare_basecase_fn_mapping[strategy](net, **base_case_kwargs)
-

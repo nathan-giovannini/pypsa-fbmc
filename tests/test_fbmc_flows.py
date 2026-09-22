@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import pypsa
 
-import fbmc.core.derived_parameters.ram as fbmc_flow
+import fbmc.core.parameters.ram as fbmc_flow
 
 class TestCalculateFlowReliabilityMargin(unittest.TestCase):
     

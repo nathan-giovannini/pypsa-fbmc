@@ -5,8 +5,12 @@ from .security_constrained import get_subnetwork_bodf
 from .ram import calculate_ram
 from .ptdf import calculate_zonal_ptdf, get_subnetwork_ptdf_non_security_constrained, calc_subnet_ptdf_security_constrained
 from ...settings import FBMCConfig
-from fbmc.core.derived_parameters.base_case import get_base_flows_subnet_non_security_constrained, calc_base_net_positions_subnet, get_base_flows_subnet_security_constrained
 from ...types import SubnetFBMCParameters, InputParametersSubnet
+from .base_case import (
+    calc_base_net_positions_subnet,
+    get_base_flows_subnet_non_security_constrained,
+    get_base_flows_subnet_security_constrained,
+)
 
 
 def calculate_fbmc_parameters_subnet(

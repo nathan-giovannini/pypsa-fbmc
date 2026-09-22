@@ -3,8 +3,8 @@ import pandas as pd
 import pypsa
 import xarray as xr
 
-from fbmc.core.derived_parameters.security_constrained import apply_bodf
-from fbmc.core.derived_parameters.utils import filter_on_cnecs, set_branch_coord_to_cnec
+from .security_constrained import apply_bodf
+from .utils import filter_on_cnecs, set_branch_coord_to_cnec
 
 
 def _get_subnetwork_ptdf(sub_network: pypsa.SubNetwork) -> xr.DataArray:

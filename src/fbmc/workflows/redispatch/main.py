@@ -4,12 +4,12 @@ from typing import Sequence
 from linopy import Model, LinearExpression
 import xarray as xr
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .security_constraints import add_security_constraints
 from .types import ReferenceDispatch
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def select_flex_gens(net, flexible_carriers: Sequence[str]) -> pd.Index:
     return net.generators.index[
@@ -70,7 +70,7 @@ def run_redispatch(
     )
     if security_constrained_flag:
         add_security_constraints(nodal_net, branch_outages)
-    logging.info("Solving redispatch optimization...")
+    logger.info("Solving redispatch optimization...")
     
     nodal_net.model.solve(**solver_kwargs)
     cost = get_costs(nodal_net)
@@ -103,7 +103,7 @@ def _set_nodal_objective(
     '''Create a model instance and alter its objective from the standard PyPSA formulation.'''
     if net.model is None:
         # model = net.optimize.create_model()
-        from fbmc.core.main import _create_model_without_meshed_split
+        from fbmc.core.model.main import _create_model_without_meshed_split
         model = _create_model_without_meshed_split(net, create_model_kwargs=create_model_kwargs)
     else:
         model = net.model

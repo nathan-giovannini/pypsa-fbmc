@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 import xarray as xr
 
-from fbmc.core.derived_parameters.security_constrained import apply_bodf
+from fbmc.core.parameters.security_constrained import apply_bodf
 
 
 class TestApplyBodfColumnwiseEquivalence(unittest.TestCase):

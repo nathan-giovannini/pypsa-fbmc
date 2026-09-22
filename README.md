@@ -9,6 +9,8 @@ Initial documentation can be found at [pypsa-fbmc.readthedocs.io](https://pypsa-
 
 ## Example
 
+Recommended one-step workflow:
+
 ```python
 import pypsa
 import fbmc
@@ -31,11 +33,19 @@ nodal_net.buses.loc[:, "zone_name"] = ["A", "B", "B"]
 # --- derive the zonal network (one bus per zone) ---
 zonal_net = nodal_net.fbmc.to_zonal(nodal_net.buses["zone_name"])
 
-# --- create model, solve, extract results ---
+# --- recommended one-step run ---
 config = fbmc.FBMCConfig.from_base_yaml()
+result = zonal_net.fbmc.run(nodal_net, config)
+```
+
+Step-by-step workflow for debugging or teaching:
+
+```python
 zonal_net.fbmc.create_model(nodal_net, config)
-zonal_net.model.solve(**config.solver_kwargs)
+zonal_net.fbmc.solve()
 result = zonal_net.fbmc.results()
 ```
 
+Optional redispatch lives outside the core FBMC workflow and can be run separately from
+`fbmc.workflows.redispatch`.
 

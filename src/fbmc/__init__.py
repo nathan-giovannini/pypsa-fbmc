@@ -2,13 +2,14 @@
 
 from . import accessor as accessor  # registers pypsa.Network.fbmc on import
 from .api import run_fbmc
-from .input_network_conversions.network_conversion import nodal_to_zonal
+from .enums import CNECStrategy as CNECStrategy
+from .enums import BaseCaseStrategy as BaseCaseStrategy
+from .enums import GSKStrategy as GSKStrategy
+from .network.network_conversion import nodal_to_zonal
 from .settings import FBMCConfig as FBMCConfig
 from .settings import merge_config_overrides
-from .enums import GSKStrategy as GSKStrategy
-from .enums import BaseCaseStrategy as BaseCaseStrategy
-from .enums import CNECStrategy as CNECStrategy
-from .types import FBMCResult, DispatchResult
+from .types import DispatchResult, FBMCResult
+from .workflows import redispatch
 
 __all__ = [
     "run_fbmc",
@@ -16,8 +17,9 @@ __all__ = [
     "merge_config_overrides",
     "GSKStrategy",
     "BaseCaseStrategy",
-    "create_case",
+    "CNECStrategy",
     "FBMCResult",
     "DispatchResult",
     "nodal_to_zonal",
+    "redispatch",
 ]

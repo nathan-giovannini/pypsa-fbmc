@@ -6,11 +6,10 @@ from dataclasses import dataclass, field
 import pypsa 
 
 
+from fbmc.enums import BaseCaseStrategy, GSKStrategy
 from fbmc.settings import FBMCConfig
-from fbmc.core.input_parameters.base_case import BaseCaseStrategy
-from fbmc.core.input_parameters.gsk import GSKStrategy
 from fbmc.types import FBMCResult
-from src.redispatch.main import run_redispatch
+from fbmc.workflows.redispatch import run as run_redispatch
 
 
 @dataclass
@@ -49,9 +48,8 @@ def run_workflow_test(
         test_case.nodal_net,
         config,
         gsk=test_case.gsk,
-        
     )
-    test_case.zonal_net.model.solve(**(config.solver_kwargs or {}))
+    test_case.zonal_net.fbmc.solve()
     result = test_case.zonal_net.fbmc.results()
 
     redispatch_kwargs = test_case.redispatch_kwargs or {}

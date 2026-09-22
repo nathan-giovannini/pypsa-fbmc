@@ -1,7 +1,7 @@
 import pypsa
 import pandas as pd
 
-from fbmc.input_network_conversions.network_conversion import nodal_to_zonal
+from fbmc.network.network_conversion import nodal_to_zonal
 
 def create_basic_three_node_case():
     # three-node network with one zone having two nodes

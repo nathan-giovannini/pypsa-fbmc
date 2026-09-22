@@ -1,9 +1,12 @@
-import pandas as pd
-import numpy as np
-import xarray as xr
-from typing import Any
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Any
+
+import numpy as np
+import pandas as pd
 import pypsa
+import xarray as xr
 
 
 def _shape_summary(obj: pd.DataFrame | xr.DataArray | dict[Any, pd.DataFrame] | None) -> str:
@@ -71,6 +74,19 @@ class InputParameters:
             cnecs=self.cnecs[subnet_name],
             base_case=self.base_case.sub_networks.obj[subnet_name]
         )
+
+
+@dataclass
+class FBMCModelState:
+    config: Any
+    input_parameters: InputParameters
+    fbmc_parameters: dict[str, "SubnetFBMCParameters"]
+    solved: bool = False
+    result: "FBMCResult | None" = None
+
+    @property
+    def base_case(self) -> pypsa.Network:
+        return self.input_parameters.base_case
 
 @dataclass
 class SubnetFBMCParameters:
@@ -145,4 +161,3 @@ class FBMCResult:
         )
 
     __repr__ = __str__
-

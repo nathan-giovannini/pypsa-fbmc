@@ -2,16 +2,17 @@ import pypsa
 import pandas as pd
 import unittest
 
-from fbmc.input_network_conversions.network_conversion import nodal_to_zonal
-from fbmc.core.pos_neg_method.main import FBMCConfig, run_fbmc
-from fbmc.core.input_parameters.gsk import GSKStrategy
+import fbmc
+from fbmc.enums import GSKStrategy
+from fbmc.network.network_conversion import nodal_to_zonal
+from fbmc.post_processing.main import get_slack_zones
 from fbmc.post_processing.market_prices import calculate_zonal_prices
 
 
 class TestFBMCResults(unittest.TestCase):
     
     def mock_config(self):
-        config = FBMCConfig()
+        config = fbmc.FBMCConfig()
         config.reliability_margin_factor = 0.0
         config.gsk_strategy = GSKStrategy.ADJUSTABLE_CAP
         config.add_security_constraints = False
@@ -36,7 +37,7 @@ class TestFBMCResults(unittest.TestCase):
     def run_fbmc(self, nodal_net):
         nodal_net.optimize(solver_name='gurobi')
         zonal_net = nodal_to_zonal(nodal_net, nodal_net.buses.zone_name)
-        config = FBMCConfig()
+        config = fbmc.FBMCConfig()
 
         config.reliability_margin_factor = 0.0
         config.gsk_strategy = GSKStrategy.ADJUSTABLE_CAP
@@ -51,21 +52,20 @@ class TestFBMCResults(unittest.TestCase):
         gsk_dict = {snapshot: gsk.copy()
             for snapshot in zonal_net.snapshots}
 
-        zonal_net, _, z_ptdf, ram = run_fbmc(nodal_net, zonal_net, config=config, gsk=gsk_dict)
-
-        return nodal_net, zonal_net, z_ptdf, ram
+        result = zonal_net.fbmc.run(nodal_net, config=config, gsk=gsk_dict)
+        return nodal_net, zonal_net, result
     
     def test_obj_value(self):
         """Test that the objective value is as expected."""
         nodal_net = self.setup_network()
-        nodal_net, zonal_net, _, _ = self.run_fbmc(nodal_net)
+        nodal_net, zonal_net, _ = self.run_fbmc(nodal_net)
         assert abs(zonal_net.model.objective.value - 5333.3333) < 1e-3
 
     def test_line_direction_invariance(self):
         """Reversing the direction of lines should not change the objective value.
         An exception here can mean that minRAM is not calculated correctly or that the minRAM constraint is not enforced. """
         nodal_net = self.setup_network()
-        nodal_net, zonal_net, _, _ = self.run_fbmc(nodal_net)
+        nodal_net, zonal_net, _ = self.run_fbmc(nodal_net)
         obj1 = zonal_net.model.objective.value
 
         # Reverse line direction
@@ -73,7 +73,7 @@ class TestFBMCResults(unittest.TestCase):
         nodal_net.lines.loc['A2-B1', ['bus0', 'bus1']] = ['A1', 'B2']
         # nodal_net.lines.loc['A1-A2', ['bus0', 'bus1']] = ['B1', 'B2']
 
-        nodal_net, zonal_net, _, _ = self.run_fbmc(nodal_net)
+        nodal_net, zonal_net, _ = self.run_fbmc(nodal_net)
         obj2 = zonal_net.model.objective.value
 
         assert abs(obj1 - obj2) < 1e-6
@@ -81,9 +81,20 @@ class TestFBMCResults(unittest.TestCase):
     def test_price_calculation(self):
         """Test that the price calculation runs without errors."""
         nodal_net = self.setup_network()
-        nodal_net, zonal_net, z_ptdf, ram = self.run_fbmc(nodal_net)
+        nodal_net, zonal_net, result = self.run_fbmc(nodal_net)
 
-        prices = calculate_zonal_prices(zonal_net.buses.index, zonal_net.snapshots, z_ptdf, zonal_net.model)
+        z_ptdf = {
+            subnet_name: params.z_ptdf
+            for subnet_name, params in result.fbmc_parameters.items()
+        }
+        slack_zone_map = get_slack_zones(result.base_case.buses)
+        prices = calculate_zonal_prices(
+            zonal_net.buses.index,
+            zonal_net.snapshots,
+            z_ptdf,
+            zonal_net.model,
+            slack_zone_map,
+        )
         assert prices is not None
         assert not prices.isna().any().any()
         assert abs(prices.loc['1', 'A'] - 400.) < 1e-3

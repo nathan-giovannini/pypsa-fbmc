@@ -2,7 +2,7 @@ import pandas as pd
 from itertools import product
 import xarray as xr 
 
-from .bridge_branches import find_bridges_sub_network
+from fbmc.core.parameters.bridge_branches import find_bridges_sub_network
 
 def add_security_constraints(nodal_net, branch_outages):
         if nodal_net.model is None:

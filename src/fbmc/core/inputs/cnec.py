@@ -8,9 +8,8 @@ import xarray as xr
 
 from fbmc.enums import CNECStrategy
 
-from ..derived_parameters.bridge_branches import find_bridges_sub_network
+from ..parameters.bridge_branches import find_bridges_sub_network
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -242,4 +241,3 @@ def filter_on_cne(ptdf_parameter: pd.DataFrame, cne_lines: list) -> pd.DataFrame
     cne_filtered_parameter = ptdf_parameter[ptdf_parameter.index.isin(cne_lines)]
 
     return cne_filtered_parameter
-
