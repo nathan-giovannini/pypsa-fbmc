@@ -75,13 +75,10 @@ def setup_fbmc_model(
     config: FBMCConfig,
 ) -> tuple[lp.Model, dict[str, SubnetFBMCParameters]]:
     fbmc_parameters = calculate_fbmc_parameters(input_parameters=input_parameters, config=config)
-
-    model = zonal_net.model
-    if model is None:
-        model = _create_model_without_meshed_split(
-            zonal_net,
-            create_model_kwargs=config.create_model_kwargs,
-        )
+    model = _create_model_without_meshed_split(
+        zonal_net,
+        create_model_kwargs=config.create_model_kwargs,
+    )
 
     create_zonal_generation(zonal_net)
     remove_original_constraints_loop(zonal_net, input_parameters.base_case)

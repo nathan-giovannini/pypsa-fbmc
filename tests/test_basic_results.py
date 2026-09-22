@@ -99,4 +99,18 @@ class TestFBMCResults(unittest.TestCase):
         assert not prices.isna().any().any()
         assert abs(prices.loc['1', 'A'] - 400.) < 1e-3
         assert abs(prices.loc['1', 'B'] - 200.) < 1e-3
+
+    def test_create_model_can_be_called_twice(self):
+        nodal_net = self.setup_network()
+        zonal_net = nodal_to_zonal(nodal_net, nodal_net.buses.zone_name)
+        config = self.mock_config()
+
+        zonal_net.fbmc.create_model(nodal_net, config)
+        first_constraints = set(zonal_net.model.constraints)
+
+        zonal_net.fbmc.create_model(nodal_net, config)
+        second_constraints = set(zonal_net.model.constraints)
+
+        self.assertEqual(first_constraints, second_constraints)
+        self.assertIn("Zone-definition", second_constraints)
         
