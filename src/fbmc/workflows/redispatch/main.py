@@ -36,7 +36,7 @@ def run_redispatch(
         deviation_factor=1.0,
         create_model_kwargs: dict[str, str] = None,
         solver_kwargs: dict[str, str] = None
-        ) -> pypsa.Network:
+        ) -> tuple[pypsa.Network, float]:
     """Run redispatch either with or without N-1 security constraint. 
 
     Args:
@@ -51,7 +51,7 @@ def run_redispatch(
         ValueError: _description_
 
     Returns:
-        pypsa.Network: _description_
+        tuple[pypsa.Network, float]: The solved nodal network and its redispatch cost.
     """
     if solver_kwargs is None:
         solver_kwargs = {}

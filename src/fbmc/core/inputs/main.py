@@ -31,7 +31,7 @@ def calc_input_parameters(
     base_case = prepare_base_case(
         nodal_net,
         strategy=config.base_case_strategy,
-        base_case_kwargs=config.solver_kwargs
+        **(config.solver_kwargs or {}),
         )
 
     if gsk is None:

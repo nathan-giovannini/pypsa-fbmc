@@ -1,4 +1,4 @@
-"""Constains the methods for preparing the base case for the FBMC optimization."""
+"""Contains the methods for preparing the base case for the FBMC optimization."""
 import pandas as pd
 import pypsa
 
@@ -40,7 +40,7 @@ def prepare_security_constrained_base_case(_nodal_net: pypsa.Network, **solver_k
             bridges.coords["branch"].values,
         ]
     )
-    branch_outages = base_case.branches().index.difference(bridge_index)
+    branch_outages = base_case.branches().index.difference(bridge_index).get_level_values(1)
     base_case.optimize.optimize_security_constrained(branch_outages=branch_outages, **solver_kwargs)
     if base_case.model.termination_condition != 'optimal':
         raise ValueError("Initial nodal optimization did not solve to optimality. Consider adding load shedding at each bus with a sufficiently high marginal cost.")
@@ -54,9 +54,7 @@ prepare_basecase_fn_mapping = {
     BaseCaseStrategy.CUSTOM: prepare_custom_base_case
 }
 
-def prepare_base_case(net: pypsa.Network, strategy: BaseCaseStrategy, base_case_kwargs: dict = None):
+def prepare_base_case(net: pypsa.Network, strategy: BaseCaseStrategy, **base_case_kwargs):
     if strategy not in prepare_basecase_fn_mapping:
         raise ValueError(f"Strategy {strategy} is not supported.")
-    if base_case_kwargs is None:
-        base_case_kwargs = {}
     return prepare_basecase_fn_mapping[strategy](net, **base_case_kwargs)

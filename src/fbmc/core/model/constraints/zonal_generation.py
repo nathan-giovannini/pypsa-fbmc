@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 
-import pandas as pd
 from linopy import merge
 from xarray import DataArray
 from pypsa.components.common import as_components

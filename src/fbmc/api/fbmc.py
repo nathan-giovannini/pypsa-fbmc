@@ -24,22 +24,6 @@ def _drop_existing_model(network: pypsa.Network) -> None:
         pass
 
 
-def _clone_without_model(network: pypsa.Network) -> pypsa.Network:
-    cloned = network.copy(snapshots=network.snapshots)
-    _drop_existing_model(cloned)
-    return cloned
-
-
-def _restore_network_template(network: pypsa.Network) -> None:
-    template = getattr(network, "_fbmc_template", None)
-    if template is None:
-        template = _clone_without_model(network)
-    pristine = _clone_without_model(template)
-    network.__dict__.clear()
-    network.__dict__.update(pristine.__dict__)
-    network._fbmc_template = template
-
-
 def get_fbmc_state(zonal_net: pypsa.Network) -> FBMCModelState:
     state = getattr(zonal_net, "_fbmc_state", None)
     if state is None:
@@ -67,7 +51,7 @@ def create_model(
         config,
         cnecs_input=cnecs,
     )
-    _restore_network_template(zonal_net)
+    _drop_existing_model(zonal_net)
     model, fbmc_parameters = setup_fbmc_model(
         zonal_net,
         input_parameters=input_parameters,
