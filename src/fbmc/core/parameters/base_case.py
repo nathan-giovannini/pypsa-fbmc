@@ -51,7 +51,6 @@ def get_base_flows_subnet_non_security_constrained(sub_network: pypsa.SubNetwork
 def get_base_flows_subnet_security_constrained(
     sub_network: pypsa.SubNetwork,
     bodf: xr.DataArray,
-    cnecs: xr.Coordinates,
     bodf_columnwise_matrix_size_limit: int,
 ) -> xr.DataArray:
     base_flows = _get_base_flows_subnet(sub_network)

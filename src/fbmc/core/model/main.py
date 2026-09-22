@@ -61,10 +61,13 @@ def calculate_fbmc_parameters(
             )
             continue
 
-        fbmc_parameters[sub_network_name] = calculate_fbmc_parameters_subnet(
+        subnet_parameters = calculate_fbmc_parameters_subnet(
             subnet_inputs,
             config,
         )
+        if subnet_parameters is None:
+            continue
+        fbmc_parameters[sub_network_name] = subnet_parameters
 
     return fbmc_parameters
 

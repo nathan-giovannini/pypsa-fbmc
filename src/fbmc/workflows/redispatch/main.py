@@ -53,6 +53,8 @@ def run_redispatch(
     Returns:
         tuple[pypsa.Network, float]: The solved nodal network and its redispatch cost.
     """
+    nodal_net = nodal_net.copy(snapshots=nodal_net.snapshots)
+
     if solver_kwargs is None:
         solver_kwargs = {}
 

@@ -5,7 +5,7 @@ from .security_constrained import get_subnetwork_bodf
 from .ram import calculate_ram
 from .ptdf import calculate_zonal_ptdf, get_subnetwork_ptdf_non_security_constrained, calc_subnet_ptdf_security_constrained
 from ...settings import FBMCConfig
-from ...types import SubnetFBMCParameters, InputParametersSubnet
+from ...types import InputParametersSubnet, SubnetFBMCParameters
 from .base_case import (
     calc_base_net_positions_subnet,
     get_base_flows_subnet_non_security_constrained,
@@ -16,7 +16,9 @@ from .base_case import (
 def calculate_fbmc_parameters_subnet(
     input_parameters_subnet: InputParametersSubnet,
     config: FBMCConfig
-) -> SubnetFBMCParameters:
+) -> SubnetFBMCParameters | None:
+    if input_parameters_subnet.base_case.buses_i().size < 3:
+        return None
     return _calculate_fbmc_parameters_subnet(
         sub_network=input_parameters_subnet.base_case,
         gsk=input_parameters_subnet.gsk,
@@ -51,13 +53,14 @@ def _calculate_fbmc_parameters_subnet(
     FBMCParameters
         Dataclass containing upper and lower RAM, zPTDF and CNECs.
     """
-    if sub_network.buses_i().size < 3:
-        raise NotImplementedError("Sub-networks with less than 3 buses are not supported.")
-
     if config.add_security_constraints:
         bodf = get_subnetwork_bodf(sub_network, cnecs, config.security_constraint_bodf_size_threshold)
         nodal_ptdf = calc_subnet_ptdf_security_constrained(sub_network, bodf, bodf_columnwise_matrix_size_limit=config.security_constraint_bodf_columnwise_matrix_size_limit)
-        base_flows_subnet = get_base_flows_subnet_security_constrained(sub_network, bodf, cnecs, bodf_columnwise_matrix_size_limit=config.security_constraint_bodf_columnwise_matrix_size_limit)
+        base_flows_subnet = get_base_flows_subnet_security_constrained(
+            sub_network,
+            bodf,
+            bodf_columnwise_matrix_size_limit=config.security_constraint_bodf_columnwise_matrix_size_limit,
+        )
         cnecs = nodal_ptdf.coords['cnec']  # Update CNECs to match the potentially reduced set in apply_security_param_changes
     else:
         nodal_ptdf = get_subnetwork_ptdf_non_security_constrained(sub_network, cnecs)

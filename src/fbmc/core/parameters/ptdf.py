@@ -69,6 +69,7 @@ def filter_zptdf(
     """
     Filter zonal PTDF to include only those with a signficant sensitivity to NP changes.
     """
-    z_ptdf_mask = z_ptdf.max(dim=["Zone", "snapshot"]) - z_ptdf.min(dim=["Zone", "snapshot"]) > sensitivity_threshold
+    reduction_dims = [dim for dim in ("Zone", "snapshot") if dim in z_ptdf.dims]
+    z_ptdf_mask = z_ptdf.max(dim=reduction_dims) - z_ptdf.min(dim=reduction_dims) > sensitivity_threshold
     z_ptdf_filtered = z_ptdf.where(z_ptdf_mask, drop=True)
     return z_ptdf_filtered

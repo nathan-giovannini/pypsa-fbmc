@@ -76,9 +76,10 @@ def solve(zonal_net: pypsa.Network, **solver_overrides) -> lp.Model:
     solver_kwargs = dict(state.config.solver_kwargs or {})
     solver_kwargs.update(solver_overrides)
     logger.info("Solving FBMC model.")
+    state.solved = False
+    state.result = None
     zonal_net.model.solve(**solver_kwargs)
     state.solved = zonal_net.model.termination_condition == "optimal"
-    state.result = None
     if not state.solved:
         raise ValueError("FBMC optimization did not solve to optimality.")
     return zonal_net.model
@@ -91,7 +92,7 @@ def results(zonal_net: pypsa.Network) -> FBMCResult:
             "No FBMC model is attached to this network. "
             "Call zonal_net.fbmc.create_model(...) first."
         )
-    if zonal_net.model.termination_condition != "optimal":
+    if not state.solved or zonal_net.model.termination_condition != "optimal":
         raise ValueError(
             "FBMC optimization did not solve to optimality. "
             "Call zonal_net.fbmc.solve() before requesting results."
