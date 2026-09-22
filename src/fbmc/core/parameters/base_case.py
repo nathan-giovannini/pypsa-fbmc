@@ -48,9 +48,18 @@ def get_base_flows_subnet_non_security_constrained(sub_network: pypsa.SubNetwork
     base_flows = set_branch_coord_to_cnec(base_flows, cnecs)
     return base_flows
 
-def get_base_flows_subnet_security_constrained(sub_network: pypsa.SubNetwork, bodf: xr.DataArray, cnecs: xr.Coordinates, bodf_columnwise_matrix_size_limit: int) -> xr.DataArray:
+def get_base_flows_subnet_security_constrained(
+    sub_network: pypsa.SubNetwork,
+    bodf: xr.DataArray,
+    cnecs: xr.Coordinates,
+    bodf_columnwise_matrix_size_limit: int,
+) -> xr.DataArray:
     base_flows = _get_base_flows_subnet(sub_network)
-    base_flows_constrained = apply_bodf(base_flows, bodf)
+    base_flows_constrained = apply_bodf(
+        base_flows,
+        bodf,
+        matrix_size_limit=bodf_columnwise_matrix_size_limit,
+    )
     return base_flows_constrained
 
 

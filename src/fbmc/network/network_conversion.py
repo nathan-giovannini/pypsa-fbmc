@@ -101,14 +101,6 @@ def nodal_to_zonal(n, bus_zone_map: pd.Series, interzonal_cap_factor: float=0.7,
     if bus_zone_map.isna().any():
         raise ValueError(f"Some buses do not have a zone assigned: {bus_zone_map[bus_zone_map.isna()]}")
 
-    # Remove the model if it exists to avoid issues during copying
-    # Try-except needed because hasattr(n, 'model') raises an error if model not created. 
-    try:
-        if hasattr(n, 'model'):
-            del(n.model) 
-    except ValueError: 
-        pass
-
     # Copy the original nodal network
     zonal_net = copy_net(n)
 

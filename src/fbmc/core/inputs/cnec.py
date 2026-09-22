@@ -166,6 +166,13 @@ def define_cnecs_from_input(
         bridge_branches: pd.MultiIndex,
 ) -> xr.Coordinates:
     all_branches = sub_network.branches()
+    if not cnecs_input:
+        raise ValueError(
+            "Invalid format for cnecs_input. Since security constraints are enabled,\n"
+            "CNECs expected format is\n"
+            "[((cne_type, cne_name), (outage_type, outage_name)), ...]\n"
+            "got an empty sequence."
+        )
     
     correct_format = isinstance(cnecs_input[0][0], (tuple, list))
     if not correct_format:
