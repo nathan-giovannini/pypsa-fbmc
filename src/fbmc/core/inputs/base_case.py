@@ -1,5 +1,4 @@
 """Contains the methods for preparing the base case for the FBMC optimization."""
-import pandas as pd
 import pypsa
 
 
@@ -36,13 +35,8 @@ def prepare_security_constrained_base_case(_nodal_net: pypsa.Network, solver_kwa
     if base_case.sub_networks.empty:
         base_case.determine_network_topology()
     bridges = find_bridges_network(base_case)
-    bridge_index = pd.MultiIndex.from_arrays(
-        [
-            bridges.coords["branch_component"].values,
-            bridges.coords["branch"].values,
-        ]
-    )
-    branch_outages = base_case.branches().index.difference(bridge_index).get_level_values(1)
+    bridge_index = bridges.coords["branch"].to_index()
+    branch_outages = base_case.branches().index.difference(bridge_index)
     base_case.optimize.optimize_security_constrained(branch_outages=branch_outages, **solver_kwargs)
     if base_case.model.termination_condition != 'optimal':
         raise ValueError("Initial nodal optimization did not solve to optimality. Consider adding load shedding at each bus with a sufficiently high marginal cost.")

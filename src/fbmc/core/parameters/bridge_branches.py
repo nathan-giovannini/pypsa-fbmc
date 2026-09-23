@@ -1,14 +1,17 @@
 import networkx as nx
+import pandas as pd
 import pypsa
 import xarray as xr
 
 
 def _empty_bridge_array() -> xr.DataArray:
+    empty_index = pd.MultiIndex.from_arrays([[], []], names=["branch_component", "branch_name"])
     return xr.DataArray(
         data=[],
         coords={
-            "branch": [],
+            "branch": empty_index,
             "branch_component": ("branch", []),
+            "branch_name": ("branch", []),
         },
         dims=["branch"],
     )
@@ -39,11 +42,18 @@ def find_bridges_sub_network(sub_network: pypsa.SubNetwork) -> xr.DataArray:
     if not branch_names:
         return _empty_bridge_array()
 
+    bridge_index = pd.MultiIndex.from_arrays(
+        [branch_components, branch_names],
+        names=["branch_component", "branch_name"],
+    )
     return xr.DataArray(
         data=branch_names,
-        coords={"branch": branch_names},
+        coords={"branch": bridge_index},
         dims=["branch"],
-    ).assign_coords(branch_component=("branch", branch_components))
+    ).assign_coords(
+        branch_component=("branch", branch_components),
+        branch_name=("branch", branch_names),
+    )
 
 
 def find_bridges_network(net: pypsa.Network) -> xr.DataArray:

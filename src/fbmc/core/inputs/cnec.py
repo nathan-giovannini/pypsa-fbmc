@@ -123,10 +123,13 @@ def define_all_cnes(sub_network: pypsa.SubNetwork) -> xr.Coordinates:
     return cnes
 
 
-def define_all_cnecs(sub_network: pypsa.SubNetwork, bridge_branches: pd.MultiIndex) -> xr.Coordinates:
+def define_all_cnecs(sub_network: pypsa.SubNetwork, bridge_branches: xr.DataArray) -> xr.Coordinates:
     cnes = define_all_cnes(sub_network)
+    cne_index = pd.MultiIndex.from_arrays(
+        [cnes.coords["branch_component"].values, cnes.coords["branch"].values]
+    )
     mask = ~xr.DataArray(
-        np.isin(cnes.coords['branch'].values, bridge_branches.coords['branch'].values),
+        np.isin(cne_index, bridge_branches.coords["branch"].to_index()),
         dims='branch'
     )
     outages = cnes.sel(branch=mask).copy().rename({'branch': 'outage', 'branch_component': 'outage_component'})
@@ -163,7 +166,7 @@ def define_cnes_from_input(
 def define_cnecs_from_input(
         sub_network: pypsa.SubNetwork,
         cnecs_input: list,
-        bridge_branches: pd.MultiIndex,
+        bridge_branches: xr.DataArray,
 ) -> xr.Coordinates:
     all_branches = sub_network.branches()
     if not cnecs_input:
@@ -199,7 +202,12 @@ def define_cnecs_from_input(
     outage_names = [t[1][1] for t in cnec_tuples]
     outage_components = [t[1][0] for t in cnec_tuples]
 
-    bridge_outages = [name for name in outage_names if name in bridge_branches.coords['branch'].values]
+    bridge_index = set(bridge_branches.coords["branch"].to_index().tolist())
+    bridge_outages = [
+        name
+        for component, name in zip(outage_components, outage_names)
+        if (component, name) in bridge_index
+    ]
     if bridge_outages:
         raise ValueError(
             f"Custom CNECs contain bridge branches as outages: {bridge_outages}. "

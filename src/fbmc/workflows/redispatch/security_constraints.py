@@ -12,12 +12,7 @@ def add_security_constraints(nodal_net, branch_outages):
             branches_i = sub_network.branches_i()
             if branch_outages is None:
                 bridges = find_bridges_sub_network(sub_network)
-                bridge_index = pd.MultiIndex.from_arrays(
-                    [
-                        bridges.coords["branch_component"].values,
-                        bridges.coords["branch"].values,
-                    ]
-                )
+                bridge_index = bridges.coords["branch"].to_index()
                 outages = branches_i.difference(bridge_index)
             else:
                 outages = branches_i.intersection(branch_outages)
