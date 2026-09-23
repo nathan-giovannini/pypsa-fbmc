@@ -36,7 +36,8 @@ def prepare_security_constrained_base_case(_nodal_net: pypsa.Network, solver_kwa
         base_case.determine_network_topology()
     bridges = find_bridges_network(base_case)
     bridge_index = bridges.coords["branch"].to_index()
-    branch_outages = base_case.branches().index.difference(bridge_index)
+    line_bridges = bridge_index[bridge_index.get_level_values(0) == "Line"].get_level_values(1)
+    branch_outages = base_case.lines.index.difference(line_bridges)
     base_case.optimize.optimize_security_constrained(branch_outages=branch_outages, **solver_kwargs)
     if base_case.model.termination_condition != 'optimal':
         raise ValueError("Initial nodal optimization did not solve to optimality. Consider adding load shedding at each bus with a sufficiently high marginal cost.")

@@ -206,8 +206,7 @@ def nodal_to_zonal_nocopy(
     # Set snapshots
     if snapshots is None:
         snapshots = nodal_network.snapshots
-    else:
-        zonal_network.set_snapshots(snapshots)
+    zonal_network.set_snapshots(snapshots)
     
     # Add zonal buses (one for each unique zone in the nodal network)
     zones = nodal_network.buses[zone_column].unique()

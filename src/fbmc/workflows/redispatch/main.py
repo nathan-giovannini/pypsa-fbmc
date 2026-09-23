@@ -37,18 +37,28 @@ def run_redispatch(
         create_model_kwargs: dict[str, str] = None,
         solver_kwargs: dict[str, str] = None
         ) -> tuple[pypsa.Network, float]:
-    """Run redispatch either with or without N-1 security constraint. 
+    """Run redispatch on a nodal network using an FBMC dispatch as reference.
 
     Args:
-        nodal_net (pypsa.Network): _description_
-        dispatch_results (ReferenceDispatch): _description_
-        adjustable_carriers (_type_, optional): _description_. Defaults to None.
-        security_constrained_flag (bool, optional): _description_. Defaults to True.
-        branch_outages (_type_, optional): _description_. Defaults to None.
-        load_shedding_cost (int, optional): _description_. Defaults to 1000.
+        nodal_net (pypsa.Network): Nodal network on which redispatch is solved.
+        dispatch_results (ReferenceDispatch): Reference dispatch from the previous FBMC run.
+        adjustable_carriers (Sequence[str] | None, optional): Generator carriers that may
+            redispatch. Defaults to all carriers present in the network.
+        security_constrained_flag (bool, optional): Whether to add N-1 redispatch security
+            constraints. Defaults to True.
+        branch_outages (Sequence | None, optional): Optional subset of branch outages to
+            consider when security constraints are enabled. Defaults to None.
+        load_shedding_cost (int, optional): Marginal cost assigned to temporary load
+            shedding generators. Defaults to 1000.
+        deviation_factor (float, optional): Blend factor between economic cost and volume
+            deviation minimization. Defaults to 1.0.
+        create_model_kwargs (dict[str, str] | None, optional): Extra arguments forwarded to
+            model creation. Defaults to None.
+        solver_kwargs (dict[str, str] | None, optional): Extra arguments forwarded to model
+            solving. Defaults to None.
 
     Raises:
-        ValueError: _description_
+        ValueError: Raised when the redispatch optimization does not solve to optimality.
 
     Returns:
         tuple[pypsa.Network, float]: The solved nodal network and its redispatch cost.
@@ -63,7 +73,7 @@ def run_redispatch(
         adjustable_carriers = nodal_net.generators.carrier.unique()
 
     flex_gens_up = select_flex_gens(nodal_net, adjustable_carriers)
-    add_load_shedding(nodal_net, load_shedding_cost=load_shedding_cost)
+    added_load_shedding = add_load_shedding(nodal_net, load_shedding_cost=load_shedding_cost)
     _drop_existing_model(nodal_net)
 
 
@@ -80,16 +90,19 @@ def run_redispatch(
     if security_constrained_flag:
         add_security_constraints(nodal_net, branch_outages)
     logger.info("Solving redispatch optimization...")
-    
-    nodal_net.model.solve(**solver_kwargs)
-    cost = get_costs(nodal_net)
 
-    if nodal_net.model.termination_condition != 'optimal':
-        raise ValueError("Redispatch optimization did not solve to optimality.")
+    try:
+        nodal_net.model.solve(**solver_kwargs)
+        cost = get_costs(nodal_net)
+        if nodal_net.model.termination_condition != 'optimal':
+            raise ValueError("Redispatch optimization did not solve to optimality.")
+    finally:
+        if len(added_load_shedding) > 0:
+            nodal_net.remove("Generator", added_load_shedding)
     return nodal_net, cost
 
 
-def add_load_shedding(net: pypsa.Network, load_shedding_cost: float) -> None:
+def add_load_shedding(net: pypsa.Network, load_shedding_cost: float) -> pd.Index:
     load_shedding_names = pd.Index(net.buses.index + "_load_shedding")
     existing_names = load_shedding_names.intersection(net.generators.index)
     if len(existing_names) > 0:
@@ -97,7 +110,7 @@ def add_load_shedding(net: pypsa.Network, load_shedding_cost: float) -> None:
 
     new_names = load_shedding_names.difference(existing_names)
     if new_names.empty:
-        return
+        return new_names
 
     net.add(
         "Generator",
@@ -107,6 +120,7 @@ def add_load_shedding(net: pypsa.Network, load_shedding_cost: float) -> None:
         marginal_cost=load_shedding_cost,
         carrier="load-shedding",
     )
+    return new_names
 
 
 

@@ -122,7 +122,7 @@ def remove_original_constraints_by_bus(network, buses):
     """
     # if it exists, remove the bus-meshed-nodal_balance constraint as well.
     if "Bus-meshed-nodal_balance" in network.model.constraints:
-        raise NotImplementedError("The function remove_original_constraints_by_subnet is not implemented yet. It should remove the Bus-meshed-nodal_balance constraint only for the buses in the sub-network, but this requires modifications to the pyPSA model structure that have not been implemented yet.")
+        raise NotImplementedError("The function remove_original_constraints_by_bus is not implemented for Bus-meshed-nodal_balance yet. It should remove the meshed nodal balance constraint only for the selected buses in the sub-network, but this requires modifications to the PyPSA model structure that have not been implemented yet.")
     constraint_to_keep = deepcopy(network.model.constraints["Bus-nodal_balance"].drop_sel(Bus=buses))
     network.model.remove_constraints("Bus-nodal_balance")
     network.model.add_constraints(constraint_to_keep, name="Bus-nodal_balance")
