@@ -33,9 +33,11 @@ def copy_net(oldnet, time_dependent_attrs=None):
     if 'country' in oldnet.buses.columns:
         bus_data_to_transfer.loc[:, 'country'] = oldnet.buses['country']
 
-    if "sub_network" in oldnet.buses.columns:
+    if "sub_network" in bus_data_to_transfer.columns:
         bus_data_to_transfer = bus_data_to_transfer.drop(columns=["sub_network"])
+    if "sub_network" in line_data_to_transfer.columns:
         line_data_to_transfer = line_data_to_transfer.drop(columns=["sub_network"])
+    if "sub_network" in transformer_data_to_transfer.columns:
         transformer_data_to_transfer = transformer_data_to_transfer.drop(columns=["sub_network"])
     
     assert pypsa.Network().buses.index.name == bus_data_to_transfer.index.name, "Bus index name does not match"

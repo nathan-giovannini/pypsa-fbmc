@@ -410,7 +410,7 @@ def gsk_adjustable_cap(
     if not np.all(np.isclose(gsk_matrix.sum(axis=1), 1)):
         raise ValueError("GSK calculation error: The sum of GSKs in every zone should be 1.")
     
-    gsk_matrix.reindex(index=buses['zone_name'].unique(), columns=buses.index, fill_value=0)
+    gsk_matrix = gsk_matrix.reindex(index=buses['zone_name'].unique(), columns=buses.index, fill_value=0)
     gsk_matrix.index.name = "Zone"
     return gsk_matrix
 

@@ -1,52 +1,60 @@
-import pypsa
-import pandas as pd
 import networkx as nx
+import pypsa
 import xarray as xr
 
 
-def find_bridges_sub_network(sub_network: pypsa.SubNetwork) -> pd.MultiIndex:
+def _empty_bridge_array() -> xr.DataArray:
+    return xr.DataArray(
+        data=[],
+        coords={
+            "branch": [],
+            "branch_component": ("branch", []),
+        },
+        dims=["branch"],
+    )
+
+
+def find_bridges_sub_network(sub_network: pypsa.SubNetwork) -> xr.DataArray:
     """
-    Identify bridges in the sub-network. A bridge is a line or transformer that, if removed, would increase the number of connected components in the network.
-    These cannot be included as outages considered for CNECs since their outage would disconnect the network (BODF value of NaN).
+    Identify bridge branches in a sub-network.
 
-    Parameters
-    ----------
-    sub_network : pypsa.SubNetwork
-
-    Returns
-    -------
-    pd.MultiIndex
-        MultiIndex of bridges in the network. (First level: branch type, second level: branch name)
+    A bridge branch is a line or transformer whose removal disconnects the network.
+    The returned value is an ``xarray.DataArray`` with dimension ``branch`` and the
+    coordinate ``branch_component`` describing whether each branch is a ``Line`` or
+    ``Transformer``.
     """
-
-    G = sub_network.graph()
-    bridges = list(nx.bridges(G))
-    # find all components connecting the bus0 and bus1 pairs of the bridges
+    graph = sub_network.graph()
+    bridges = list(nx.bridges(graph))
     bus0 = sub_network.branches().bus0
     bus1 = sub_network.branches().bus1
-    
-    bridge_branches = pd.MultiIndex(levels=[[], []], codes=[[], []])
+
+    branch_components: list[str] = []
+    branch_names: list[str] = []
     for u, v in bridges:
         mask = ((bus0 == u) & (bus1 == v)) | ((bus0 == v) & (bus1 == u))
-        bridge_branches = bridge_branches.append(sub_network.branches().index[mask]) 
+        matching = sub_network.branches().index[mask]
+        branch_components.extend(matching.get_level_values(0).tolist())
+        branch_names.extend(matching.get_level_values(1).tolist())
 
-    bridge_branches_da = xr.DataArray(
-        data=bridge_branches.values,
-        coords={'branch': bridge_branches.get_level_values(1).values},
-        dims=['branch']
-    ).assign_coords(branch_component=('branch', bridge_branches.get_level_values(0).values)) 
-    return bridge_branches_da
+    if not branch_names:
+        return _empty_bridge_array()
+
+    return xr.DataArray(
+        data=branch_names,
+        coords={"branch": branch_names},
+        dims=["branch"],
+    ).assign_coords(branch_component=("branch", branch_components))
+
 
 def find_bridges_network(net: pypsa.Network) -> xr.DataArray:
-    """Loops over all sub-networks (connected AC) in a net and returns the bridge branches.
-
-    Args:
-        net (pypsa.Network)
-
-    Returns:
-        xr.DataArray: bridge branches with 'branch' dim and 'branch_component' coord.
     """
-    return xr.concat(
-        [find_bridges_sub_network(subnet) for subnet in net.sub_networks.obj],
-        dim='branch'
-    )
+    Return all bridge branches across every sub-network in ``net``.
+
+    The return value is an ``xarray.DataArray`` with dimension ``branch`` and the
+    coordinate ``branch_component``.
+    """
+    bridge_arrays = [find_bridges_sub_network(subnet) for subnet in net.sub_networks.obj]
+    non_empty = [bridge_array for bridge_array in bridge_arrays if bridge_array.sizes["branch"] > 0]
+    if not non_empty:
+        return _empty_bridge_array()
+    return xr.concat(non_empty, dim="branch")

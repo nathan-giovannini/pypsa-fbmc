@@ -29,30 +29,32 @@ def add_security_constraints(nodal_net, branch_outages):
                 outages
             ]
 
-            for c_outage, c_affected in product(
-                outages.unique(0), branches_i.unique(0)
-            ):
-                c_outage_ = c_outage + "-outage"
-                c_outages = outages.get_loc_level(c_outage)[1]
-                flow_outage = m.variables[c_outage + "-s"].loc[:, c_outages]
-                flow_outage = flow_outage.rename({c_outage: c_outage_})
+            for outage_component, outage_branch in outages:
+                c_outage_ = f"{outage_component}-outage"
+                flow_outage = m.variables[f"{outage_component}-s"].loc[:, [outage_branch]]
+                flow_outage = flow_outage.rename({outage_component: c_outage_})
 
-                bodf = BODF.loc[c_affected, c_outage]
-                bodf = xr.DataArray(bodf, dims=[c_affected, c_outage_])
-                additional_flow = flow_outage * bodf
-                for bound, kind in product(("lower", "upper"), ("fix", "ext")):
-                    coord = c_affected + "-" + kind
-                    constraint = coord + "-s-" + bound
-                    if constraint not in m.constraints:
-                        continue
-                    rename = {c_affected: coord}
-                    added_flow = additional_flow.rename(rename)
-                    con = m.constraints[constraint]  # use this as a template
-                    # idx now contains fixed/extendable for the sub-network
-                    idx = con.lhs.indexes[coord].intersection(added_flow.indexes[coord])
-                    sel = {coord: idx}
-                    lhs = con.lhs.sel(sel) + added_flow.sel(sel)
-                    name = constraint + f"-security-for-{c_outage_}-in-{sub_network}"
-                    m.add_constraints(
-                        lhs, con.sign.sel(sel), con.rhs.sel(sel), name=name
+                for c_affected in branches_i.unique(0):
+                    bodf_series = BODF.loc[c_affected, (outage_component, outage_branch)]
+                    bodf = xr.DataArray(
+                        bodf_series.values,
+                        coords={c_affected: bodf_series.index},
+                        dims=[c_affected],
                     )
+                    additional_flow = flow_outage * bodf
+                    for bound, kind in product(("lower", "upper"), ("fix", "ext")):
+                        coord = c_affected + "-" + kind
+                        constraint = coord + "-s-" + bound
+                        if constraint not in m.constraints:
+                            continue
+                        rename = {c_affected: coord}
+                        added_flow = additional_flow.rename(rename)
+                        con = m.constraints[constraint]  # use this as a template
+                        # idx now contains fixed/extendable for the sub-network
+                        idx = con.lhs.indexes[coord].intersection(added_flow.indexes[coord])
+                        sel = {coord: idx}
+                        lhs = con.lhs.sel(sel) + added_flow.sel(sel)
+                        name = constraint + f"-security-for-{outage_component}-{outage_branch}-in-{sub_network}"
+                        m.add_constraints(
+                            lhs, con.sign.sel(sel), con.rhs.sel(sel), name=name
+                        )
