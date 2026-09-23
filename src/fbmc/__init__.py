@@ -1,7 +1,7 @@
 """Flow-Based Market Coupling (FBMC) extension for PyPSA."""
 
 from . import accessor as accessor  # registers pypsa.Network.fbmc on import
-from .api import run_fbmc
+from .api.fbmc import run_fbmc
 from .enums import CNECStrategy as CNECStrategy
 from .enums import BaseCaseStrategy as BaseCaseStrategy
 from .enums import GSKStrategy as GSKStrategy

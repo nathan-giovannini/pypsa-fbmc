@@ -49,7 +49,7 @@ def run_workflow_test(
         config,
         gsk=test_case.gsk,
     )
-    test_case.zonal_net.fbmc.solve()
+    test_case.zonal_net.fbmc.solve(**(config.solver_kwargs or {}))
     result = test_case.zonal_net.fbmc.results()
 
     redispatch_kwargs = test_case.redispatch_kwargs or {}
