@@ -136,9 +136,9 @@ are treated differently.
 Implementation
 --------------
 
-* ``src/fbmc/core/derived_parameters/ram.py``
+* ``src/fbmc/core/parameters/ram.py``
 * Key functions:
 
-  - :func:`fbmc.core.derived_parameters.ram.calculate_ram` – compute upper and lower RAM arrays.
-  - :func:`fbmc.core.derived_parameters.ram.calculate_flow_reliability_margin` – compute FRM.
-  - :func:`fbmc.core.derived_parameters.ram.calculate_branch_capacity` – extract thermal limits.
+  - :func:`fbmc.core.parameters.ram.calculate_ram` – compute upper and lower RAM arrays.
+  - :func:`fbmc.core.parameters.ram.calculate_flow_reliability_margin` – compute FRM.
+  - :func:`fbmc.core.parameters.ram.calculate_branch_capacity` – extract thermal limits.

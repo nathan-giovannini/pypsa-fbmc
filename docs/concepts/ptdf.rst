@@ -74,8 +74,8 @@ form the N-1 CNEC rows in the zPTDF matrix.
 Implementation
 --------------
 
-* ``src/fbmc/core/derived_parameters/ptdf.py`` – nodal and zonal PTDF calculation.
-* ``src/fbmc/core/derived_parameters/security_constrained.py`` – BODF computation and
+* ``src/fbmc/core/parameters/ptdf.py`` – nodal and zonal PTDF calculation.
+* ``src/fbmc/core/parameters/security_constrained.py`` – BODF computation and
   application.
 
-The main entry point is :func:`fbmc.core.derived_parameters.ptdf.calculate_zonal_ptdf`.
+The main entry point is :func:`fbmc.core.parameters.ptdf.calculate_zonal_ptdf`.

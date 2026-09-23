@@ -7,6 +7,8 @@ Flow-Based Market Coupling (FBMC) extension for `PyPSA <https://pypsa.readthedoc
 allocation. It takes a nodal power system model (PyPSA Network) alongside a zonal market
 model and adds the FBMC capacity constraints derived from the nodal topology.
 
+If you are new to the project, start with :doc:`quickstart`.
+
 
 .. toctree::
    :maxdepth: 2
@@ -41,10 +43,18 @@ model and adds the FBMC capacity constraints derived from the nodal topology.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Optional workflows
+
+   workflows/redispatch
+
+.. toctree::
+   :maxdepth: 2
    :caption: API reference
 
-   api/run_fbmc
+   api/run
    api/to_zonal
+   api/create_model
+   api/solve
    api/results
    api/types
    api/enums

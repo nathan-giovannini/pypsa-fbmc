@@ -82,7 +82,9 @@ CNEC selection
      - How to select CNECs. 
      If ``ALL``, select all lines and transformers. In case ``add_security_constraints`` is True, 
      CNECs are defined as all combinations of branches. 
-     If ``CUSTOM``, CNECs must be explicitly passed (as run_fbmc(cnecs=..))
+     If ``CUSTOM``, CNECs must be explicitly passed to
+     ``zonal_net.fbmc.run(..., cnecs=...)`` or
+     ``zonal_net.fbmc.create_model(..., cnecs=...)``.
      NOTE: 
    * - ``add_security_constraints``
      - ``True``
@@ -170,4 +172,3 @@ Solver
    * - ``create_model_kwargs``
      - ``{}``
      - Passed to ``pypsa.Network.optimize.create_model()``.
-

@@ -12,7 +12,7 @@ Accessing results
 
 .. code-block:: python
 
-   result = run_fbmc(zonal_net, nodal_net, config)
+   result = zonal_net.fbmc.run(nodal_net, config)
 
    # Zone net positions: DataFrame[snapshots × zones]  (MW)
    print(result.net_positions)
