@@ -44,15 +44,60 @@ PERTURBATION TYPES (specify ONE, not multiple):
 """
 
 PARAMETERS = [
- #    {
- #        "name": "Renewables capacity",
- #        "component": "generators",
- #        "attribute": "p_nom",
- #        "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
- #        "countries": ['BE'],
- # #           , 'DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
- #        "variation": 0.20,
- #    },
+    # {
+    #     "name": "Renewables capacity",
+    #     "component": "generators",
+    #     "attribute": "p_nom",
+    #     "selector": lambda df: df["carrier"].isin(["onwind", "solar", "offwind-ac"]),
+    #     "countries": ['BE','DE', 'DK', 'FR', 'GB', 'IE', 'LU', 'NL'],  # run independently per country
+    #     "variation": 0.20,
+    # },
+    #
+    {
+        "name": "Renewable production - wind",
+        "component": "generators",
+        "attribute": "p_max_pu",
+        "selector": lambda df: df["carrier"].isin(["onwind", "offwind-ac"]),
+        "variation": 0.03,
+    },
+    #
+    # {
+    #     "name": "Renewable production - solar",
+    #     "component": "generators",
+    #     "attribute": "p_max_pu",
+    #     "selector": lambda df: df["carrier"].isin(["solar"]),
+    #     "variation": 0.01,
+    # },
+    #
+    # {
+    #     "name": "Demand level",
+    #     "component": "loads",
+    #     "attribute": "p_set",
+    #     "selector": "all",
+    #     "variation": 0.10,
+    # },
+    #
+    # {
+    #     "name": "Belgian nuclear (downward only)",
+    #     "component": "generators",
+    #     "attribute": "p_nom",
+    #     "selector": lambda df: df["carrier"] == "nuclear",
+    #     "countries": ['BE'],
+    #     "discrete_change_low": 4000,  # Only test downward: -50 MW
+    # },
+    #
+    # {
+    #     "name": "Marginal cost -asymmetric-",
+    #     "component": "generators",
+    #     "attribute": "marginal_cost",
+    #     "selector": lambda df: df["carrier"] == "CCGT",
+    #     "discrete_change_low": 160,  # -150 MW
+    #     "discrete_change_high": 80,  # +150 MW
+    # },
+
+
+##########################################
+
     #
     # {
     #     "name": "Storage capacity",
@@ -71,21 +116,7 @@ PARAMETERS = [
     #     "variation": 0.2,
     # },
     #
-    # {
-    #     "name": "Renewable production",
-    #     "component": "generators",
-    #     "attribute": "p_max_pu",
-    #     "selector": lambda df: df["carrier"].isin(["onwind", "solar", "solar-hsat"]),
-    #     "variation": 0.20,
-    # },
-    #
-    # {
-    #     "name": "Demand level",
-    #     "component": "loads",
-    #     "attribute": "p_set",
-    #     "selector": "all",
-    #     "variation": 0.10,
-    # },
+
     
     # Example of discrete symmetric parameter change (uncomment to use):
     # Distributes ±100 proportionally across all gas generators
@@ -100,24 +131,16 @@ PARAMETERS = [
     # Example of discrete asymmetric changes (uncomment to use):
     # Only tests downward: value - 50
     # {
-    #     "name": "Belgian nuclear (downward only)",
-    #     "component": "generators",
-    #     "attribute": "p_nom",
-    #     "selector": lambda df: df["carrier"] == "nuclear",
+    #     "name": "transmission test",
+    #     "component": "lines",
+    #     "attribute": "s_nom",
+    #     "selector": lambda df: (
+    #             (df["bus0"].str.contains("FR") & df["bus1"].str.contains("BE"))
+    #             | (df["bus0"].str.contains("BE") & df["bus1"].str.contains("FR"))
+    #     ),
     #     "countries": ['BE'],
-    #     "discrete_change_low": 4000,  # Only test downward: -50 MW
+    #     "discrete_change_low": 1000,  # Only test downward: -50 MW
     # },
-    {
-        "name": "transmission test",
-        "component": "lines",
-        "attribute": "s_nom",
-        "selector": lambda df: (
-                (df["bus0"].str.contains("FR") & df["bus1"].str.contains("BE"))
-                | (df["bus0"].str.contains("BE") & df["bus1"].str.contains("FR"))
-        ),
-        "countries": ['BE'],
-        "discrete_change_low": 1000,  # Only test downward: -50 MW
-    },
 
     #
     # Only tests upward: value + 200
@@ -135,10 +158,10 @@ PARAMETERS = [
     #     "component": "loads",
     #     "attribute": "p_set",
     #     "selector": "all",
-    #     "discrete_change_low": 100,   # -100 MW
-    #     "discrete_change_high": 150,  # +150 MW
+    #     "discrete_change_low": 0,   # -100 MW
+    #     "discrete_change_high": 3.712091e+06,  # +150 MW
     # },
-    
+    # #
     # ... add as many parameters as you need
 ]
 
@@ -146,11 +169,11 @@ PARAMETERS = [
 # depending on how you normally load it)
 
 #BASELINE_NETWORK_PATH = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/validation/three-country-fbmc.nc"
-BASELINE_NETWORK_PATH = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/test/base_s_25_elec_Ep100.nc"
+BASELINE_NETWORK_PATH = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/conferenceV0.1/base_s_adm_elec_3000seg.nc"
 
 
 #RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/validation"
-RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/test_param"
+RESULTS_DIR = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/results/conferenceV0"
 
 # How to map buses to countries when network.buses has no 'country' column,
 # e.g. bus "DE1" -> "DE" with prefix_length=2. Set to None if your network
@@ -165,5 +188,5 @@ VOLL = 3000
 
 #baseline preprocessing
 FREEZE_EXPANSION_FLAG = True
-BZ_RENAME_FLAG = True
+BZ_RENAME_FLAG = False
 BZ_RENAME_FILE = "/Users/ng-work/Models/pypsa-fbmc/tornado-analysis/inputs/test/bz_rename.csv"

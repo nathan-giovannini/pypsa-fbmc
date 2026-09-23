@@ -88,7 +88,7 @@ def _get_perturbation_description(param):
             parts.append(f"{param['discrete_change_low']} MW")
         if "discrete_change_high" in param:
             parts.append(f"{param['discrete_change_high']} MW")
-        return "/".join(parts) if len(parts) == 2 else parts[0]
+        return "-".join(parts) if len(parts) == 2 else parts[0]
     elif "discrete_change" in param:
         return f"±{param['discrete_change']} MW"
     return "unknown"
@@ -124,7 +124,7 @@ def main():
     print(f"Loading baseline network from {BASELINE_NETWORK_PATH}")
     baseline_network = pypsa.Network(BASELINE_NETWORK_PATH)
 
-    baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
+    #baseline_network.set_snapshots(baseline_network.snapshots[:24]) #for quick runs
     bus_country = bus_country_map(baseline_network, prefix_length=COUNTRY_BUS_PREFIX_LENGTH)
 
     if FREEZE_EXPANSION_FLAG == True:

@@ -32,7 +32,8 @@ def main():
     pivot["delta_low"] = pivot["low"] - baseline_value
     pivot["delta_high"] = pivot["high"] - baseline_value
     pivot["range"] = (pivot["high"] - pivot["low"]).abs()
-    pivot = pivot.sort_values("range")  # largest impact at top when plotted
+    pivot["max"] = pivot[["delta_low", "delta_high"]].max(axis=1)
+    pivot = pivot.sort_values("max")  # largest impact at top when plotted
 
     fig, ax = plt.subplots(figsize=(9, 0.5 * len(pivot) + 2))
 

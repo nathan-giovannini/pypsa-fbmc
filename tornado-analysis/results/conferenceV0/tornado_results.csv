@@ -1,0 +1,4 @@
+parameter,direction,status,welfare_distribution_shift,total_system_cost,total_generation_MWh,curtailment_MWh,avg_electricity_price
+baseline,baseline,ok,0.0,90069.96231143217,3712722.4078559587,2174118.9254123564,0.029476464705953876
+Demand change (asymmetric),low,ok,0.0,90069.96231143217,3712722.4078559587,2174118.9254123564,0.029476464705953876
+Demand change (asymmetric),high,failed: Initial nodal optimization did not solve to optimality. Consider adding load shedding at each bus,,,,,
