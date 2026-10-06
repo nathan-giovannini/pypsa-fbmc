@@ -5,7 +5,7 @@ import xarray as xr
 
 
 def _empty_bridge_array() -> xr.DataArray:
-    empty_index = pd.MultiIndex.from_arrays([[], []], names=["branch_component", "branch_name"])
+    empty_index = pd.MultiIndex.from_arrays([[], []], names=["branch_component", "branch"])
     return xr.DataArray(
         data=[],
         coords={
@@ -44,7 +44,7 @@ def find_bridges_sub_network(sub_network: pypsa.SubNetwork) -> xr.DataArray:
 
     bridge_index = pd.MultiIndex.from_arrays(
         [branch_components, branch_names],
-        names=["branch_component", "branch_name"],
+        names=["branch_component", "branch"],
     )
     return xr.DataArray(
         data=branch_names,

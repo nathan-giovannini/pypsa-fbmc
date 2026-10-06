@@ -90,6 +90,7 @@ def run_redispatch(
     if security_constrained_flag:
         add_security_constraints(nodal_net, branch_outages)
     logger.info("Solving redispatch optimization...")
+    cost = None
 
     try:
         nodal_net.model.solve(**solver_kwargs)

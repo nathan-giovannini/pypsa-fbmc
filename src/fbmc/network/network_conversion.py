@@ -105,21 +105,13 @@ def nodal_to_zonal(n, bus_zone_map: pd.Series, interzonal_cap_factor: float=0.7,
     if bus_zone_map.isna().any():
         raise ValueError(f"Some buses do not have a zone assigned: {bus_zone_map[bus_zone_map.isna()]}")
 
-    original_model = None
-    had_model = False
     try:
         if hasattr(n, "model"):
-            original_model = n.model
-            had_model = True
             del n.model
     except ValueError:
-        had_model = False
+        pass
 
-    try:
-        zonal_net = copy_net(n)
-    finally:
-        if had_model:
-            n.model = original_model
+    zonal_net = copy_net(n)
 
     # Store original mapping from nodal bus -> zone
 
