@@ -219,17 +219,12 @@ def welfare_shares(welfare_series):
     return welfare_series / total
 
 
-def distribution_shift(baseline_welfare, perturbed_welfare):
+def welfare_shift(baseline_welfare, perturbed_welfare):
     """
-    Sum of absolute changes in each country's share of total welfare,
-    vs baseline. 0 = no redistribution; larger = more welfare shifted
-    between countries, independent of whether total welfare grew or shrank.
+    Sum over countries of the absolute change in welfare (EUR) between the
+    baseline and the perturbed scenario.
     """
-    base_shares = welfare_shares(baseline_welfare)
-    pert_shares = welfare_shares(perturbed_welfare)
-
-    all_countries = base_shares.index.union(pert_shares.index)
-    base_shares = base_shares.reindex(all_countries, fill_value=0)
-    pert_shares = pert_shares.reindex(all_countries, fill_value=0)
-
-    return (pert_shares - base_shares).abs().sum()
+    countries = baseline_welfare.index.union(perturbed_welfare.index)
+    base = baseline_welfare.reindex(countries, fill_value=0)
+    pert = perturbed_welfare.reindex(countries, fill_value=0)
+    return (pert - base).abs().sum()

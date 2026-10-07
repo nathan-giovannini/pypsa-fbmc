@@ -62,6 +62,7 @@ rule run_baseline_case:
     output:
         metrics=f"{RES}/cases/baseline/metrics.json",
         welfare=f"{RES}/cases/baseline/welfare.csv",
+        network=f"{RES}/cases/baseline/network.nc",
     params:
         solver=SOLVER, prefix=PREFIX, voll=VOLL,
     run:
@@ -74,6 +75,7 @@ rule run_case:
     output:
         metrics=f"{RES}/cases/{{case}}/metrics.json",
         welfare=f"{RES}/cases/{{case}}/welfare.csv",
+        network=f"{RES}/cases/{{case}}/network.nc",
     wildcard_constraints:
         case="(?!baseline$)[^/]+",
     params:

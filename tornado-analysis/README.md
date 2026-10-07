@@ -32,7 +32,7 @@ only reruns the new/changed cases, then re-aggregates and re-plots.
    on the configured buses (one global cost). Load-shedding generators are
    named `"<bus> load shedding"`.
 2. `run_baseline_case` / `run_case` – one solve per case, writing
-   `cases/<case>/metrics.json` and `welfare.csv`.
+   `cases/<case>/metrics.json`, `welfare.csv` and `network.nc`.
 3. `aggregate` – `tornado_results.csv`, `welfare_by_country.csv`.
 4. `plot_tornado`, `plot_welfare` – charts for `tornado_metrics` / `welfare_plots`.
 
@@ -54,6 +54,14 @@ only reruns the new/changed cases, then re-aggregates and re-plots.
 - Country = `buses.country` if present, else the first
   `country_bus_prefix_length` characters of the bus name.
 - Congestion rent is split 50/50 between the two countries of a line/link.
-- `welfare_distribution_shift` = sum of absolute changes in each country's
-  welfare share vs baseline.
+- `welfare_shift` = sum over countries of the absolute change in total
+  welfare (EUR) from baseline to the perturbed case. Its tornado chart is
+  drawn with dots joined to the y axis by a line.
+- Every case saves its network as `cases/<case>/network.nc` (solved; the
+  unsolved perturbed network if the solve failed).
+- A failed solve (infeasible, unbounded, solver error) does not stop the
+  sweep: `metrics.json` and `tornado_results.csv` get `status = failed: ...`
+  and a `diagnostics` entry (solver, termination condition, hint, demand vs
+  available generation, negative-cost generators, extendable assets). A
+  failing baseline stops the workflow.
 - Connecting to pypsa-fbmc later means swapping `tornado_analysis/model.py:run_model`.

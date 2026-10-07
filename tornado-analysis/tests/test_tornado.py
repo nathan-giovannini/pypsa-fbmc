@@ -132,7 +132,48 @@ def test_run_model_and_steps(tmp_path):
     step_aggregate(str(tmp_path), ["c__up"], str(tmp_path / "t.csv"), str(tmp_path / "w.csv"))
     t = pd.read_csv(tmp_path / "t.csv")
     assert list(t.direction) == ["baseline", "up"]
-    assert t.loc[0, "welfare_distribution_shift"] == 0
+    assert t.loc[0, "welfare_shift"] == 0
+    assert t.loc[1, "welfare_shift"] > 0
+    assert (tmp_path / "cases" / "c__up" / "network.nc").exists()
     assert t.loc[1, "total_system_cost"] > t.loc[0, "total_system_cost"]
     w = pd.read_csv(tmp_path / "w.csv")
     assert {"baseline", "up"} == set(w.direction)
+
+
+def test_welfare_shift_is_sum_of_absolute_changes():
+    from tornado_analysis.welfare import welfare_shift
+    base = pd.Series({"DE": 100.0, "FR": 50.0})
+    pert = pd.Series({"DE": 90.0, "FR": 65.0, "BE": -5.0})
+    assert welfare_shift(base, pert) == pytest.approx(10 + 15 + 5)
+
+
+def test_infeasible_case_is_recorded_with_diagnostics(tmp_path):
+    import json
+    n = make_network()  # no load shedding: demand cannot be met after a deep cut
+    base = tmp_path / "base.nc"
+    n.export_to_netcdf(str(base))
+    spec = case(parameter="Gas cut", direction="down", mode="relative", magnitude=1.0,
+                target={"component": "generators", "attribute": "p_nom", "kind": "static"},
+                selector={})
+    out = tmp_path / "cases" / "cut__down"
+    step_run_case(str(base), spec, {"name": "highs"}, 2, 3000, str(out))
+    m = json.loads((out / "metrics.json").read_text())
+    assert m["status"].startswith("failed")
+    assert m["diagnostics"]["snapshots_with_generation_below_demand"] == 4
+    assert "hint" in m["diagnostics"]
+    assert (out / "network.nc").exists()
+    step_run_case(str(base), None, {"name": "highs"}, 2, 3000, str(tmp_path / "cases" / "baseline"))
+    step_aggregate(str(tmp_path), ["cut__down"], str(tmp_path / "t.csv"), str(tmp_path / "w.csv"))
+    t = pd.read_csv(tmp_path / "t.csv")
+    assert t.loc[1, "status"].startswith("failed") and pd.isna(t.loc[1, "welfare_shift"])
+    assert "diagnostics" in t.columns
+
+
+def test_baseline_failure_raises(tmp_path):
+    from tornado_analysis.model import OptimizationError
+    n = make_network()
+    n.generators["p_nom"] = 0.0
+    base = tmp_path / "base.nc"
+    n.export_to_netcdf(str(base))
+    with pytest.raises(OptimizationError):
+        step_run_case(str(base), None, {"name": "highs"}, 2, 3000, str(tmp_path / "cases" / "baseline"))

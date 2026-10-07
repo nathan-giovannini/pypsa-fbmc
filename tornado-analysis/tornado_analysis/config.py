@@ -29,7 +29,7 @@ def validate_config(cfg):
     cfg.setdefault("voll", 3000)
     cfg.setdefault("baseline", {})
     cfg.setdefault("solver", {"name": "highs", "options": {}})
-    cfg.setdefault("tornado_metrics", ["welfare_distribution_shift"])
+    cfg.setdefault("tornado_metrics", ["welfare_shift"])
     cfg.setdefault("welfare_plots", [])
     names = set()
     for p in cfg["perturbations"]:

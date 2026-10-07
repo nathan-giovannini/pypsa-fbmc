@@ -64,6 +64,6 @@ perturbations:
     down: 0.10
 
 # Metrics to draw tornado charts for, and welfare-share drill-downs
-tornado_metrics: [welfare_distribution_shift, total_system_cost]
+tornado_metrics: [welfare_shift, total_system_cost]
 welfare_plots: []
   # - {parameter: "Renewable production - wind", direction: up}
