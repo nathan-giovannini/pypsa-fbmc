@@ -6,10 +6,10 @@ import pypsa
 from .welfare import bus_country_map
 
 
-def bidding_zones_rename(network, csv_path):
+def bidding_zones_rename(network, csv_path, prefix_length=None):
     """Add `zone_name` to buses (country by default, overridden by the CSV) and drop listed buses."""
     mapping = pd.read_csv(csv_path)
-    network.buses["zone_name"] = network.buses.country
+    network.buses["zone_name"] = bus_country_map(network, prefix_length=prefix_length)
     for _, row in mapping.iterrows():
         if row["name_bus"] in network.buses.index and pd.notna(row["rename_zone"]):
             network.buses.loc[row["name_bus"], "zone_name"] = row["rename_zone"]
@@ -44,7 +44,7 @@ def prepare_baseline(network, baseline_cfg, prefix_length=None):
 
     bz = baseline_cfg.get("bz_rename") or {}
     if bz.get("enabled"):
-        network = bidding_zones_rename(network, bz["file"])
+        network = bidding_zones_rename(network, bz["file"], prefix_length)
 
     if baseline_cfg.get("fix_optimal_capacities", True):
         network.optimize.fix_optimal_capacities()

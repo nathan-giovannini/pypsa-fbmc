@@ -7,10 +7,9 @@ import pandas as pd
 import pypsa
 
 from .baseline import prepare_baseline
-from .config import load_config
 from .model import run_model
 from .perturb import apply_perturbation
-from .welfare import WELFARE_COMPONENT_COLUMNS, bus_country_map, distribution_shift
+from .welfare import WELFARE_COMPONENT_COLUMNS, bus_country_map, distribution_shift, welfare_shares
 
 WELFARE_COLUMNS = WELFARE_COMPONENT_COLUMNS + ["total"]
 
@@ -56,8 +55,8 @@ def step_aggregate(results_dir, case_ids, tornado_path, welfare_path):
         countries = welfare.index.union(base_welfare.index)
         w = welfare.reindex(countries, fill_value=0)
         b = base_welfare.reindex(countries, fill_value=0)
-        share = w["total"] / w["total"].sum() if w["total"].sum() else w["total"] * 0
-        base_share = b["total"] / b["total"].sum() if b["total"].sum() else b["total"] * 0
+        share = welfare_shares(w["total"])
+        base_share = welfare_shares(b["total"])
         for c in countries:
             welfare_rows.append({
                 "parameter": metrics["parameter"], "direction": metrics["direction"], "country": c,
