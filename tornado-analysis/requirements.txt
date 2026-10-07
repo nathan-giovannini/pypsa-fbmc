@@ -1,0 +1,13 @@
+# Dependencies of the tornado-analysis workflow (run from tornado-analysis/)
+pypsa>=0.35
+linopy>=0.7
+numpy>=1.26
+pandas>=2.2
+xarray>=2024.3
+netCDF4>=1.6
+matplotlib>=3.7
+pyyaml>=6.0
+snakemake>=8.0
+highspy>=1.7      # default open-source solver
+gurobipy>=12.0    # optional: only if solver.name is gurobi in config.yaml
+pytest>=8.0
