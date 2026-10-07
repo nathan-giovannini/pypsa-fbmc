@@ -5,6 +5,12 @@ solve with standard PyPSA (`n.optimize`), and compare scalar metrics and
 the welfare distribution across countries. All user input lives in
 `config.yaml`.
 
+## Install
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Run
 
 From this folder:
