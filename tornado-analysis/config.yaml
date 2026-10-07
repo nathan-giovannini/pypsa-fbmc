@@ -1,0 +1,69 @@
+# All user input for the tornado workflow. Paths are relative to this folder.
+# Run:  snakemake -j 4
+
+study: conferenceV0                 # results go to results/<study>/
+network: inputs/conferenceV0.1/base_s_adm_elec_3000seg.nc
+
+country_bus_prefix_length: 2        # bus "DE1" -> "DE" (ignored if buses have a 'country' column)
+voll: 3000                          # EUR/MWh, used for consumer surplus
+
+solver:
+  name: gurobi
+  options: {OutputFlag: 0}
+
+# Done ONCE on the baseline network (not per perturbation)
+baseline:
+  fix_optimal_capacities: true      # n.optimize.fix_optimal_capacities()
+  load_shedding:                    # n.optimize.add_load_shedding()
+    enabled: true
+    cost: 3000                      # EUR/MWh, one global value
+    sign: 1
+    buses:                          # empty = all buses; names and countries combine with AND
+      countries: [BE, DE, FR, NL]
+      # names: []
+  bz_rename:
+    enabled: false
+    file: inputs/test/bz_rename.csv
+
+# ---------------------------------------------------------------------------
+# Perturbations
+#   target.kind     static      -> n.<component>.<attribute>
+#                   timeseries  -> n.<component>_t.<attribute> (all snapshots)
+#   selector        names / carrier / countries / query (pandas query) -- AND
+#   per_country     true -> one independent case per entry of selector.countries
+#   mode            relative -> value * (1 +/- x)
+#                   absolute -> value +/- x, spread over the selected assets
+#                               proportionally to their current value
+#   up / down       magnitudes, independent. A missing one is NOT run.
+# ---------------------------------------------------------------------------
+perturbations:
+  - name: Renewable production - wind
+    target: {component: generators, attribute: p_max_pu, kind: timeseries}
+    selector: {carrier: [onwind, offwind-ac]}
+    mode: relative
+    up: 0.03
+    down: 0.03
+
+  - name: Gas marginal cost
+    target: {component: generators, attribute: marginal_cost, kind: static}
+    selector: {carrier: [CCGT]}
+    mode: absolute
+    up: 80
+    down: 160
+
+  - name: Belgian nuclear (downward only)
+    target: {component: generators, attribute: p_nom, kind: static}
+    selector: {carrier: [nuclear], countries: [BE]}
+    mode: absolute
+    down: 4000
+
+  - name: Demand level
+    target: {component: loads, attribute: p_set, kind: timeseries}
+    mode: relative
+    up: 0.10
+    down: 0.10
+
+# Metrics to draw tornado charts for, and welfare-share drill-downs
+tornado_metrics: [welfare_distribution_shift, total_system_cost]
+welfare_plots: []
+  # - {parameter: "Renewable production - wind", direction: up}

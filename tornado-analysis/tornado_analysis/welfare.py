@@ -124,16 +124,19 @@ def congestion_rent_by_country(network, bus_country):
         return pd.Series(dtype=float)
 
     flow = network.lines_t.p0  # snapshots x lines, flow leaving bus0
-    price0 = network.buses_t.marginal_price[lines["zone0"]]
-    price1 = network.buses_t.marginal_price[lines["zone1"]]
+    # zone0/zone1 are set by zonal (FBMC) models; plain PyPSA uses bus0/bus1
+    end0 = lines["zone0"] if "zone0" in lines.columns else lines["bus0"]
+    end1 = lines["zone1"] if "zone1" in lines.columns else lines["bus1"]
+    price0 = network.buses_t.marginal_price[end0]
+    price1 = network.buses_t.marginal_price[end1]
     price0.columns = lines.index
     price1.columns = lines.index
 
     rent = ((price1 - price0) * flow).sum()  # per line, summed over snapshots
 
 
-    country0 = lines["zone0"].map(bus_country)
-    country1 = lines["zone1"].map(bus_country)
+    country0 = end0.map(bus_country)
+    country1 = end1.map(bus_country)
 
 
     half = rent / 2

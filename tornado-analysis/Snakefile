@@ -1,0 +1,116 @@
+"""
+Tornado sensitivity workflow. Run from this folder:
+
+    snakemake -j 4                       # everything
+    snakemake -j 4 --configfile my.yaml  # another study
+
+Every case (perturbation x direction x optional country) is its own job
+whose inputs/params are the baseline network and the case spec, so adding
+or editing one perturbation in config.yaml only reruns the affected cases
+(plus the cheap aggregate/plot rules).
+"""
+
+import sys
+
+sys.path.insert(0, workflow.basedir)
+
+from tornado_analysis.config import expand_cases, slugify, validate_config
+from tornado_analysis import steps
+
+configfile: "config.yaml"
+
+validate_config(config)
+CASES = expand_cases(config)
+STUDY = config["study"]
+RES = f"results/{STUDY}"
+SOLVER = config["solver"]
+PREFIX = config["country_bus_prefix_length"]
+VOLL = config["voll"]
+
+
+def welfare_plot_targets():
+    return [
+        f"{RES}/welfare_dist_{slugify(p['parameter'])}_{p['direction']}.png"
+        for p in config["welfare_plots"]
+    ]
+
+
+rule all:
+    input:
+        f"{RES}/tornado_results.csv",
+        f"{RES}/welfare_by_country.csv",
+        expand(f"{RES}/tornado_{{metric}}.png", metric=config["tornado_metrics"]),
+        welfare_plot_targets(),
+
+
+rule prepare_baseline:
+    input:
+        network=config["network"],
+        bz=config["baseline"].get("bz_rename", {}).get("file", []) if config["baseline"].get("bz_rename", {}).get("enabled") else [],
+    output:
+        f"{RES}/baseline_network.nc",
+    params:
+        baseline=config["baseline"],
+        prefix=PREFIX,
+    run:
+        steps.step_prepare_baseline(input.network, output[0], params.baseline, params.prefix)
+
+
+rule run_baseline_case:
+    input:
+        f"{RES}/baseline_network.nc",
+    output:
+        metrics=f"{RES}/cases/baseline/metrics.json",
+        welfare=f"{RES}/cases/baseline/welfare.csv",
+    params:
+        solver=SOLVER, prefix=PREFIX, voll=VOLL,
+    run:
+        steps.step_run_case(input[0], None, params.solver, params.prefix, params.voll, f"{RES}/cases/baseline")
+
+
+rule run_case:
+    input:
+        f"{RES}/baseline_network.nc",
+    output:
+        metrics=f"{RES}/cases/{{case}}/metrics.json",
+        welfare=f"{RES}/cases/{{case}}/welfare.csv",
+    wildcard_constraints:
+        case="(?!baseline$)[^/]+",
+    params:
+        spec=lambda wc: CASES[wc.case],
+        solver=SOLVER, prefix=PREFIX, voll=VOLL,
+    run:
+        steps.step_run_case(input[0], params.spec, params.solver, params.prefix, params.voll, f"{RES}/cases/{wildcards.case}")
+
+
+rule aggregate:
+    input:
+        f"{RES}/cases/baseline/metrics.json",
+        expand(f"{RES}/cases/{{case}}/metrics.json", case=list(CASES)),
+    output:
+        tornado=f"{RES}/tornado_results.csv",
+        welfare=f"{RES}/welfare_by_country.csv",
+    run:
+        steps.step_aggregate(RES, list(CASES), output.tornado, output.welfare)
+
+
+rule plot_tornado:
+    input:
+        f"{RES}/tornado_results.csv",
+    output:
+        f"{RES}/tornado_{{metric}}.png",
+    run:
+        steps.step_plot_tornado(input[0], wildcards.metric, output[0])
+
+
+rule plot_welfare:
+    input:
+        f"{RES}/welfare_by_country.csv",
+    output:
+        f"{RES}/welfare_dist_{{name}}_{{direction}}.png",
+    wildcard_constraints:
+        direction="up|down",
+    run:
+        parameter = next(p["parameter"] for p in config["welfare_plots"]
+                         if slugify(p["parameter"]) == wildcards.name and p["direction"] == wildcards.direction)
+        steps.step_plot_welfare(input[0], parameter, wildcards.direction, output[0])
