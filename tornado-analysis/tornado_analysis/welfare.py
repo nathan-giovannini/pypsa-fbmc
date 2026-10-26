@@ -124,16 +124,19 @@ def congestion_rent_by_country(network, bus_country):
         return pd.Series(dtype=float)
 
     flow = network.lines_t.p0  # snapshots x lines, flow leaving bus0
-    price0 = network.buses_t.marginal_price[lines["zone0"]]
-    price1 = network.buses_t.marginal_price[lines["zone1"]]
+    # zone0/zone1 are set by zonal (FBMC) models; plain PyPSA uses bus0/bus1
+    end0 = lines["zone0"] if "zone0" in lines.columns else lines["bus0"]
+    end1 = lines["zone1"] if "zone1" in lines.columns else lines["bus1"]
+    price0 = network.buses_t.marginal_price[end0]
+    price1 = network.buses_t.marginal_price[end1]
     price0.columns = lines.index
     price1.columns = lines.index
 
     rent = ((price1 - price0) * flow).sum()  # per line, summed over snapshots
 
 
-    country0 = lines["zone0"].map(bus_country)
-    country1 = lines["zone1"].map(bus_country)
+    country0 = end0.map(bus_country)
+    country1 = end1.map(bus_country)
 
 
     half = rent / 2
@@ -216,17 +219,12 @@ def welfare_shares(welfare_series):
     return welfare_series / total
 
 
-def distribution_shift(baseline_welfare, perturbed_welfare):
+def welfare_shift(baseline_welfare, perturbed_welfare):
     """
-    Sum of absolute changes in each country's share of total welfare,
-    vs baseline. 0 = no redistribution; larger = more welfare shifted
-    between countries, independent of whether total welfare grew or shrank.
+    Sum over countries of the absolute change in welfare (EUR) between the
+    baseline and the perturbed scenario.
     """
-    base_shares = welfare_shares(baseline_welfare)
-    pert_shares = welfare_shares(perturbed_welfare)
-
-    all_countries = base_shares.index.union(pert_shares.index)
-    base_shares = base_shares.reindex(all_countries, fill_value=0)
-    pert_shares = pert_shares.reindex(all_countries, fill_value=0)
-
-    return (pert_shares - base_shares).abs().sum()
+    countries = baseline_welfare.index.union(perturbed_welfare.index)
+    base = baseline_welfare.reindex(countries, fill_value=0)
+    pert = perturbed_welfare.reindex(countries, fill_value=0)
+    return (pert - base).abs().sum()
