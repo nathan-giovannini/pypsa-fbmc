@@ -26,6 +26,6 @@ units aggregated accordingly.  Cross-zone lines become links in the zonal networ
 See also
 --------
 
-* :doc:`run_fbmc` for the next step — building the FBMC model on the zonal network.
-* :func:`fbmc.input_network_conversions.network_conversion.nodal_to_zonal` for the
+* :doc:`run` for the next step — running FBMC on the zonal network.
+* :func:`fbmc.network.network_conversion.nodal_to_zonal` for the
   underlying conversion function.

@@ -26,9 +26,9 @@ pipeline internally:
    c. Creates zone net-position variables and removes nodal balance constraints.
    d. Injects FBMC capacity constraints into the linopy model.
 
-After calling ``create_model``, solve and extract results through the linopy interface.
-Do not solve using pypsa.Network.optimize.solve_model, as this will raise an error since there are non-default
-variables (Zone-p).
+After calling ``create_model``, continue with
+:meth:`fbmc.accessor.FBMCAccessor.solve` and
+:meth:`fbmc.accessor.FBMCAccessor.results`.
 
 .. code-block:: python
 
@@ -38,7 +38,7 @@ variables (Zone-p).
    config = FBMCConfig()
 
    zonal_net.fbmc.create_model(nodal_net, config)
-   zonal_net.model.solve(**config.solver_kwargs)
+   zonal_net.fbmc.solve()
    result = zonal_net.fbmc.results()
 
 Providing a custom GSK
@@ -64,7 +64,9 @@ See also
 --------
 
 * :doc:`/concepts/fbmc_overview` for the algorithm steps.
+* :doc:`run` for the recommended one-step user workflow.
 * :doc:`to_zonal` for converting a nodal network to a zonal one.
+* :doc:`solve` for solving a previously created model.
 * :doc:`results` for extracting results after solving.
 * :class:`~fbmc.types.FBMCResult` for the result type.
 * :class:`~fbmc.settings.FBMCConfig` for all configuration options.

@@ -1,6 +1,17 @@
 Quick Start
 ===========
 
+This page is written for first-time users.
+
+If you are new to the repository, follow the steps in this order:
+
+1. install the package and a solver
+2. build a nodal PyPSA network
+3. add ``zone_name`` labels to buses
+4. convert the nodal network to a zonal network
+5. call :meth:`fbmc.accessor.FBMCAccessor.run`
+6. inspect the returned :class:`fbmc.types.FBMCResult`
+
 Installation
 ------------
 
@@ -9,31 +20,46 @@ Requires Python 3.11 or later.
 .. code-block:: bash
 
    git clone https://github.com/WouterKoksNL/pypsa-fbmc
-   pip install ./pypsa-fbmc
+   cd pypsa-fbmc
+   pip install .
 
-You also need a supported LP/MIP solver. The default is **Gurobi**; a free academic
-licence is available from `gurobi.com <https://www.gurobi.com>`_. Any solver supported
-by `linopy <https://linopy.readthedocs.io>`_ can be used by changing ``solver_name``
-in the config.
+Solver setup
+------------
 
-Running the minimal example
----------------------------
+The default configuration uses **Gurobi**.
 
-Importing :mod:`fbmc` registers a ``.fbmc`` accessor on every :class:`pypsa.Network`.
-The workflow is:
+If you want to use another solver supported by
+`linopy <https://linopy.readthedocs.io>`_, change the solver name in
+``config.solver_kwargs``.
 
-1. Build nodal and zonal networks.
-2. **Create the FBMC model** – attach FBMC capacity constraints to the zonal network's
-   linopy model.
-3. **Solve** – call the standard PyPSA/linopy solver.
-4. **Extract results** – read optimal values back into the network.
+For example:
+
+.. code-block:: python
+
+   import fbmc
+
+   config = fbmc.FBMCConfig.from_base_yaml()
+   config.solver_kwargs["solver_name"] = "highs"
+
+Before you start
+----------------
+
+Your nodal :class:`pypsa.Network` should have:
+
+* buses
+* loads
+* generators or other supply-side assets
+* AC branches with valid reactances
+* a ``zone_name`` column on ``nodal_net.buses``
+
+Minimal first run
+-----------------
 
 .. code-block:: python
 
    import pypsa
    import fbmc
 
-   # --- build a nodal network ---
    nodal_net = pypsa.Network()
    nodal_net.set_snapshots(["1", "2"])
    nodal_net.add("Bus", ["A1", "B1", "B2"])
@@ -46,68 +72,88 @@ The workflow is:
    nodal_net.add("Generator", "gen_B2", bus="B2", p_nom=100, marginal_cost=200)
    nodal_net.add("Load", "load_A1", bus="A1", p_set=[15, 15])
 
-   # --- derive the zonal network (one bus per zone) ---
    zonal_net = nodal_net.fbmc.to_zonal(nodal_net.buses["zone_name"])
 
-   # --- create model, solve, extract results ---
    config = fbmc.FBMCConfig.from_base_yaml()
-   zonal_net.fbmc.create_model(nodal_net, config)
-   zonal_net.model.solve(**config.solver_kwargs)
-   result = zonal_net.fbmc.results()
+   result = zonal_net.fbmc.run(nodal_net, config)
 
-   print(result.dispatch_results)
-   print(result.net_positions)
+What the one-step workflow does
+-------------------------------
+
+:meth:`fbmc.accessor.FBMCAccessor.run` performs the full default FBMC workflow:
+
+1. validate the nodal and zonal inputs
+2. prepare the base-case nodal state
+3. compute or validate the GSK
+4. choose CNECs
+5. build the zonal FBMC model
+6. solve it
+7. return the final :class:`fbmc.types.FBMCResult`
 
 What you get back
 -----------------
 
-:meth:`~fbmc.accessor.FBMCAccessor.results` returns an :class:`~fbmc.types.FBMCResult`
-with:
+The returned :class:`fbmc.types.FBMCResult` contains:
 
-* **net_positions** – ``DataArray[snapshot × Zone]`` of zone net positions (MW).
-* **dispatch_results** – :class:`~fbmc.types.DispatchResult` with generator dispatch,
-  storage dispatch, link flows, storage levels, and (if LP) water values.
-* **fbmc_parameters** – per-subnet zonal PTDFs and RAM values, for inspection or
-  post-processing.
-* **zonal_net** – the solved zonal PyPSA network with all time-series results attached.
-* **base_case** – the nodal network in its base-case state (used to derive PTDFs and RAM).
+* ``net_positions`` – zone net positions by snapshot
+* ``dispatch_results`` – generator, storage, and link dispatch results
+* ``fbmc_parameters`` – per-subnet zPTDF and RAM data
+* ``zonal_net`` – the solved zonal network
+* ``base_case`` – the nodal base-case network used to derive FBMC parameters
 
-Configuring the run
--------------------
-
-All options live in :class:`~fbmc.settings.FBMCConfig`. The default configuration is
-loaded from ``config/base_config.yaml`` via :meth:`~fbmc.settings.FBMCConfig.from_base_yaml`
-(built-in defaults are used if the file is absent). To override individual fields:
+Example:
 
 .. code-block:: python
 
-   from fbmc import FBMCConfig, merge_config_overrides
-   from fbmc.enums import GSKStrategy, BaseCaseStrategy
+   print(result.net_positions)
+   print(result.dispatch_results.generators_p)
 
-   config = FBMCConfig.from_base_yaml()
+Step-by-step mode
+-----------------
 
-   config = merge_config_overrides(config, {
-       "gsk_strategy": GSKStrategy.ADJUSTABLE_CAP,
-       "base_case_strategy": BaseCaseStrategy.NODAL_OPTIMUM,
-       "reliability_margin_factor": 0.10,
-       "solver_kwargs": {"solver_name": "highs"},
-   })
+If you want to inspect the stages manually:
 
-See :doc:`api/config` for a full description of every parameter.
+.. code-block:: python
 
-Providing a custom GSK
-----------------------
+   zonal_net.fbmc.create_model(nodal_net, config)
+   zonal_net.fbmc.solve()
+   result = zonal_net.fbmc.results()
 
-Pass GSK values directly as a ``{zone_name: {bus_name: weight}}`` dict
-(or a snapshot-keyed dict of such dicts for time-varying GSKs):
+Use this mode for debugging, teaching, or checking intermediate model state.
+
+Custom GSK input
+----------------
+
+If you already know the GSK you want to use, pass it explicitly:
 
 .. code-block:: python
 
    gsk = {
-       "Zone_A": {"Bus_A1": 0.6, "Bus_A2": 0.4},
-       "Zone_B": {"Bus_B1": 1.0},
+       snapshot: gsk_df
+       for snapshot in nodal_net.snapshots
    }
 
-   zonal_net.fbmc.create_model(nodal_net, config, gsk=gsk)
-   zonal_net.model.solve(**config.solver_kwargs)
-   result = zonal_net.fbmc.results()
+   result = zonal_net.fbmc.run(nodal_net, config, gsk=gsk)
+
+Optional redispatch
+-------------------
+
+Redispatch is an optional workflow layered on top of FBMC.
+It is **not** part of the default ``run()`` path.
+
+.. code-block:: python
+
+   rd_net, rd_cost = fbmc.redispatch.run(
+       nodal_net,
+       result.dispatch_results,
+   )
+
+Where to go next
+----------------
+
+* :doc:`api/run`
+* :doc:`api/to_zonal`
+* :doc:`api/create_model`
+* :doc:`api/solve`
+* :doc:`api/results`
+* :doc:`workflows/redispatch`

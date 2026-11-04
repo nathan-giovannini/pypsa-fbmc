@@ -3,8 +3,8 @@ import unittest
 import pandas as pd
 import numpy as np
 import pypsa
-from fbmc.core.derived_parameters.security_constrained import add_security_constraints
-from fbmc.input_network_conversions.network_conversion import nodal_to_zonal
+from fbmc.core.parameters.security_constrained import add_security_constraints
+from fbmc.network.network_conversion import nodal_to_zonal
 
 class TestSecurityConstraints(unittest.TestCase):
 

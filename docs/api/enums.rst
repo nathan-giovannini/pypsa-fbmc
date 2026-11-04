@@ -71,4 +71,5 @@ CNECStrategy values
      - Monitor all non-bridge branches in the network (N-0, plus N-1 when
        security constraints are enabled).
    * - ``CUSTOM``
-     - Monitor only the branches passed explicitly to run_fbmc
+     - Monitor only the branches passed explicitly to ``zonal_net.fbmc.run(...)`` or
+       ``zonal_net.fbmc.create_model(...)``.

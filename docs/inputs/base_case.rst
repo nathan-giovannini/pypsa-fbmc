@@ -51,5 +51,5 @@ constraints, while ``NODAL_OPTIMUM`` gives physically realistic constraints.
 Implementation
 --------------
 
-* ``src/fbmc/core/input_parameters/base_case.py``
-* Entry point: :func:`fbmc.core.input_parameters.base_case.prepare_base_case`.
+* ``src/fbmc/core/inputs/base_case.py``
+* Entry point: :func:`fbmc.core.inputs.base_case.prepare_base_case`.

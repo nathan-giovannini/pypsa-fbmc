@@ -96,7 +96,7 @@ converted to the required ``xarray.DataArray`` format:
 
    gsk = {snapshot: gsk_df for snapshot in nodal_net.snapshots}
 
-   result = run_fbmc(zonal_net, nodal_net, config, gsk=gsk)
+   result = zonal_net.fbmc.run(nodal_net, config, gsk=gsk)
 
 Each DataFrame has zones as its index and buses as its columns.
 Each zone's row must sum to 1, and buses outside the zone must be 0.
@@ -104,6 +104,6 @@ Each zone's row must sum to 1, and buses outside the zone must be 0.
 Implementation
 --------------
 
-* ``src/fbmc/core/input_parameters/gsk.py`` – all GSK strategy implementations.
-* Entry point: :func:`fbmc.core.input_parameters.gsk.calculate_gsk`.
-* Helper: :func:`fbmc.core.input_parameters.gsk.gsk_dict_to_xarray`.
+* ``src/fbmc/core/inputs/gsk.py`` – all GSK strategy implementations.
+* Entry point: :func:`fbmc.core.inputs.gsk.calculate_gsk`.
+* Helper: :func:`fbmc.core.inputs.gsk.gsk_dict_to_xarray`.

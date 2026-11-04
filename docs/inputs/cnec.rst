@@ -37,10 +37,9 @@ The CNEC set is controlled by :attr:`~fbmc.settings.FBMCConfig.cnec_setting`:
      - All non-bridge branches (N-0) plus all significant N-1 pairs (when security
        constraints are enabled).
    * - ``CUSTOM``
-     - Only the CNECs directly passed to :attr:`~fbmc.api.run_fbmc()`
-
-Additionally, :attr:`~fbmc.settings.FBMCConfig.line_usage_threshold` (default ``0.2``)
-can be used to filter out lightly loaded branches whose constraints are unlikely to bind.
+     - Only the CNECs directly passed to
+       :meth:`~fbmc.accessor.FBMCAccessor.run` or
+       :meth:`~fbmc.accessor.FBMCAccessor.create_model`.
 
 CNEC dimensions in the code
 -----------------------------
@@ -57,9 +56,9 @@ self-describing.
 Implementation
 --------------
 
-* ``src/fbmc/core/input_parameters/cnec.py``
-* ``src/fbmc/core/derived_parameters/bridge_branches.py``
+* ``src/fbmc/core/inputs/cnec.py``
+* ``src/fbmc/core/parameters/bridge_branches.py``
 * Key functions:
 
-  - :func:`fbmc.core.input_parameters.cnec.cnec_router` – top-level dispatcher.
-  - :func:`fbmc.core.input_parameters.cnec.cnec_subnet_router` – per-subnet CNEC selection.
+  - :func:`fbmc.core.inputs.cnec.cnec_router` – top-level dispatcher.
+  - :func:`fbmc.core.inputs.cnec.cnec_subnet_router` – per-subnet CNEC selection.
